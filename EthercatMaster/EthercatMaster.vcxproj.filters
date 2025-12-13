@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Fichiers sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Fichiers d%27en-tête">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Fichiers de ressources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\L230_conf.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ecat_system.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plc_task_manager.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plc_functions.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plc_task.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\msg_queue.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ethercat_slaves.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\plc_app1.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http_server\civetweb.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plc_tcp_server.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\ecat_system.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\L230_conf.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plc_task_manager.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plc_functions.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\msg_queue.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ethercat_slaves.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\plc_app_conf.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\http_server\civetweb.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plc_tcp_server.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\http_server\handle_form.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\http2.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\match.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\md5.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\mod_duktape.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\mod_gnutls.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\mod_lua.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\mod_lua_shared.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\mod_mbedtls.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\mod_zlib.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\openssl_dl.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\response.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\sha1.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\sort.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\timer.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+    <None Include="src\http_server\wolfssl_extras.inl">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </None>
+  </ItemGroup>
+</Project>

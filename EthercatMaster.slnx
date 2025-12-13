@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="EthercatMaster/EthercatMaster.vcxproj" Id="18ddca2d-49ee-42a4-9e00-d38d090a4e32" />
+</Solution>
