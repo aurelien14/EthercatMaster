@@ -23,9 +23,6 @@ typedef enum {
     TASK_STATE_ERROR = 2
 } PLCTaskState;
 
-#include <stdint.h>
-#include <stdatomic.h>
-#include <stdbool.h>
 
 // typedef existants supposés : PLCTaskFunction, PLCTaskPriority, PLCTaskState, EcatSlave
 
@@ -51,8 +48,8 @@ typedef struct PLCTask_t {
     // État (accessible)
     bool init;                      // true après 1ère exécution
     uint64_t execution_count;
-    void* user_data;
-    void* arg;
+    void* user_data;                //TODO: voir si utile
+    void* arg;                      //pssage argument fonction taches plc 
 
     // Stats (auto)
     uint32_t	execution_time_us;	// ✅ Moyenne glissante

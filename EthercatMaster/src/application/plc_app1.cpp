@@ -4,9 +4,7 @@
 MyPLCApp_conf_t PLCApp_conf;
 
 
-
-
-//TODO: enelevr slave et utiliser base address des buffers rx et PDO_tx.iomap
+//TODO: construire la configuration à partir d'un fichier
 void map_IOtags_to_PDO(Conf_IO_ethercat_t* io, Slave_PDO_t* pdo) {
     set_iotag(&io->X15, "X15", pdo, offsetof(L230_RX_PDO_t, L230_DO_Byte0), 0, PLC_BOOL, SL_OUTPUT);
     set_iotag(&io->X12, "X12", pdo, offsetof(L230_RX_PDO_t, L230_DO_Byte0), 1, PLC_BOOL, SL_OUTPUT);
@@ -37,9 +35,13 @@ void map_IOtags_to_PDO(Conf_IO_ethercat_t* io, Slave_PDO_t* pdo) {
     set_iotag(&io->DI7, "DI7", pdo, offsetof(L230_TX_PDO_t, L230_DI_Byte0), 7, PLC_BOOL, SL_INPUT);
     set_iotag(&io->X55, "X55", pdo, offsetof(L230_TX_PDO_t, L230_DI_Byte1), 0, PLC_BOOL, SL_INPUT);
 
-    set_iotag(&io->AV_CPU_Pt_X21, "AV_CPU_Pt_X21", pdo, offsetof(L230_TX_PDO_t, X21_CPU_Pt1.Pt_Value), 0, PLC_REAL, SL_INPUT);
-    set_iotag(&io->AV_CPU_Pt_X22, "AV_CPU_Pt_X22", pdo, offsetof(L230_TX_PDO_t, X22_CPU_Pt2.Pt_Value), 0, PLC_REAL, SL_INPUT);
-    set_iotag(&io->AV_CPU_VC_X23, "AV_CPU_VC_X23", pdo, offsetof(L230_TX_PDO_t, X23_CPU_VC1.VC_Value), 0, PLC_REAL, SL_INPUT);
+    set_iotag(&io->X21_CPU_Pt1, "CPU_Pt_X21", pdo, offsetof(L230_TX_PDO_t, X21_CPU_Pt1.Pt_Value), 0, PLC_REAL, SL_INPUT);
+    set_iotag(&io->X22_CPU_Pt2, "CPU_Pt_X22", pdo, offsetof(L230_TX_PDO_t, X22_CPU_Pt2.Pt_Value), 0, PLC_REAL, SL_INPUT);
+
+    //variable PV interne
+    set_iotag(&io->AV_CPU_Pt_X21, "AV_CPU_Pt_X21", pdo, NULL, 0, PLC_REAL, SL_INTERN);
+    set_iotag(&io->AV_CPU_Pt_X22, "AV_CPU_Pt_X22", pdo, NULL, 0, PLC_REAL, SL_INTERN);
+    set_iotag(&io->AV_CPU_VC_X23, "AV_CPU_VC_X23", pdo, NULL, 0, PLC_REAL, SL_INTERN);
 }
 
 
@@ -55,7 +57,7 @@ void init_plc_map_io(MyPLCApp_conf_t* plc_conf, EcatSlave* slaves, int slave_cou
 
 void task_app1(PLCTask_t* self) {
 	MyPLCApp_conf_t *plc_conf = (MyPLCApp_conf_t*)self->arg;
-    const Conf_IO_ethercat* io = &plc_conf->IO_Conf;
+    Conf_IO_ethercat* io = &plc_conf->IO_Conf;
 
 	//get_slave_pdo_buffer(&self->slaves[0].pdo, plc_conf);
 
@@ -76,7 +78,11 @@ void task_app1(PLCTask_t* self) {
     L230_TX_PDO_t* inputs;
     L230_RX_PDO_t* outputs;
 
-
+    float x21;
+    plc_read(&io->X21_CPU_Pt1, &x21);
+    x21 = pt100_resistance_to_temperature(100);
+    io->AV_CPU_Pt_X21.ptr = &x21;
+    
 
     if (t_on_off_500) {
         if (plc_ton(self, &plc_conf->timer1, t_on_off_500, 500)) {
@@ -85,6 +91,7 @@ void task_app1(PLCTask_t* self) {
             //outputs->L230_DO_Byte1_bits.X6_Out3 = 1;
             t_on_off_500 = 0;
             plc_conf->timer2.output = true;
+            printf("[TASK1] Température: %.2f°C\n", x21);
         }
     }
     else {
@@ -96,6 +103,5 @@ void task_app1(PLCTask_t* self) {
         }
     }
 
-
-	
+    
 }

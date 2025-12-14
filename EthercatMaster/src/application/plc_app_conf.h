@@ -29,6 +29,8 @@ typedef struct Conf_IO_ethercat {
 	IOTag_t DI6;
 	IOTag_t DI7;
 	IOTag_t X55;
+	IOTag_t X21_CPU_Pt1;
+	IOTag_t X22_CPU_Pt2;
 	IOTag_t AV_CPU_Pt_X21;
 	IOTag_t AV_CPU_Pt_X22;
 	IOTag_t AV_CPU_VC_X23;
@@ -40,31 +42,11 @@ typedef struct MyPLCApp_conf {
 	L230_TX_PDO_t* L230_inputs;
 	L230_RX_PDO_t* L230_outputs;
 
-	Conf_IO_ethercat IO_Conf;
+	Conf_IO_ethercat_t IO_Conf;
 
 	PLC_timer_t timer1;
 	PLC_timer_t timer2;
 } MyPLCApp_conf_t;
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-static inline void get_slave_pdo_buffer(Slave_PDO_t* pdo, MyPLCApp_conf_t* MyPLCApp_conf) {
-	ecat_get_app_buffers(pdo,
-		(void**)&MyPLCApp_conf->L230_inputs,
-		(void**)&MyPLCApp_conf->L230_outputs);
-}
-*/
-
 
 
 void task_app1(PLCTask_t* self);

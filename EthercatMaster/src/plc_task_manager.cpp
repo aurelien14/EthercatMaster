@@ -4,7 +4,9 @@
 #include <stdio.h>
 
 #include "plc_task_manager.h"
-//
+
+#define PLC_EXEC_AVG_WINDOW 16
+
 
 void plc_task_manager_init(PLCTaskManager_t* tm, int max_tasks, EcatSlave* slaves, int slave_count)
 {
@@ -38,6 +40,9 @@ void plc_task_manager_init(PLCTaskManager_t* tm, int max_tasks, EcatSlave* slave
     // ============================================================
     for (int i = 0; i < max_tasks; ++i) {
         PLCTask_t* task = &tm->tasks[i];
+        if (task == NULL)
+            printf("[TASK]: problème d'initilisation de la tâche %d\n", i);
+            continue;
 
         task->state = TASK_STATE_DISABLED;
         task->init = false;
@@ -160,57 +165,6 @@ int plc_task_manager_add(PLCTaskManager_t* tm,
     return id;
 }
 
-#if 0
-int plc_task_manager_add(PLCTaskManager_t* tm,
-    const char* name,
-    PLCTaskFunction function,
-    uint32_t cycle_time_ms,
-    PLCTaskPriority priority) {
-
-    if (tm->task_count >= tm->max_tasks) {
-        printf("[TASK] Erreur: Nombre max de tâches atteint (%d)\n", tm->max_tasks);
-        return -1;
-    }
-
-    int id = tm->task_count;
-    PLCTask_t* task = &tm->tasks[id];
-
-    //configuration
-     // Contexte système (sera mis à jour par le scheduler)
-    task->timestamp_ms = 0;
-    //task->cycle_time_s = 0.0f;
-    task->cycle_time_ms = cycle_time_ms;
-    task->function = function;
-    task->priority = priority;
-    task->name = name;
-
-    //TODO: au lieu de slaves, mettre pdo ou une structure pour récupérer tous les pdo des esclaves
-    task->slaves = tm->slaves;
-    task->slave_count = tm->slave_count;
-
-    // État
-    task->state = TASK_STATE_ENABLED;
-    task->init = false;          // ✅ FALSE au démarrage
-    task->execution_count = 0;
-
-    // Données privées
-    task->user_data = NULL;
-
-    // Runtime
-    task->last_execution_ms = 0;
-    task->execution_time_us = 0;
-    task->max_execution_us = 0;
-    task->overrun_count = 0;
-
-    tm->task_count++;
-
-    printf("[TASK] Ajoutée: '%s' (cycle=%ums, prio=%d)\n",
-        name, cycle_time_ms, priority);
-
-    return id;
-}
-#endif
-
 void plc_task_manager_enable(PLCTaskManager_t* tm, int task_id) {
     if (task_id >= 0 && task_id < tm->task_count) {
         tm->tasks[task_id].state = TASK_STATE_ENABLED;
@@ -222,8 +176,6 @@ void plc_task_manager_disable(PLCTaskManager_t* tm, int task_id) {
         tm->tasks[task_id].state = TASK_STATE_DISABLED;
     }
 }
-
-#define PLC_EXEC_AVG_WINDOW 16
 
 void plc_task_manager_run(PLCTaskManager_t* tm)
 {
@@ -313,7 +265,6 @@ void plc_task_manager_run(PLCTaskManager_t* tm)
 }
 
 
-
 void plc_task_manager_print_stats(PLCTaskManager_t* tm) {
     printf("\n");
     printf("╔══════════════════════════════════════════════════════════════════════════╗\n");
@@ -363,6 +314,7 @@ void plc_task_manager_cleanup(PLCTaskManager_t* tm) {
     }
     tm->task_count = 0;
 }
+
 
 void* task_alloc_userdata(PLCTask_t* task, size_t size) {
     if (task->user_data) {

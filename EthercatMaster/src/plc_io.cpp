@@ -2,11 +2,18 @@
 
 void set_iotag(IOTag_t* iotag, const char* name, Slave_PDO_t* pdo, size_t offset, int bit_index, DATA_TYPE type1, DATA_TYPE2 type2) {
     iotag->name = name;
-    iotag->pdo = pdo;
-    iotag->offset = offset;
-    iotag->bit_index = bit_index;
     iotag->type = type1;
     iotag->type2 = type2;
+    if (type2 == SL_PV) {
+        iotag->pdo = NULL;
+        iotag->offset = 0;
+        iotag->bit_index = 0;
+    }
+    else {
+        iotag->pdo = pdo;
+        iotag->offset = offset;
+        iotag->bit_index = bit_index;
+    }
 }
 
 
