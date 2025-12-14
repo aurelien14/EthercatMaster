@@ -19,13 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\plc_io.h" />
     <ClCompile Include="src\application\plc_app1.cpp" />
     <ClCompile Include="src\ethercat_slaves.cpp" />
     <ClCompile Include="src\http_server\civetweb.c" />
     <ClCompile Include="src\msg_queue.cpp" />
     <ClCompile Include="src\plc_functions.cpp" />
     <ClCompile Include="src\plc_tcp_server.cpp" />
-    <ClCompile Include="src\plc_task.cpp" />
+    <ClCompile Include="src\plc_io.cpp" />
     <ClCompile Include="src\plc_task_manager.cpp" />
     <ClCompile Include="src\ecat_system.cpp" />
     <ClCompile Include="src\L230_conf.cpp" />

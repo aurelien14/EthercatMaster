@@ -9,7 +9,9 @@ EcatSlaveInfo L230_info = {
     .man = 0x47535953,
     
     .rx_pdo_size = sizeof(L230_RX_PDO_t),
+#if !defined TRIPLE_BUFFER_ON_RX
     .tx_pdo_size = sizeof(L230_TX_PDO_t),
+#endif
 
     .config_hook = config_EL230,
     .name = "L230",

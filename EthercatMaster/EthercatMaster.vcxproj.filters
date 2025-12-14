@@ -30,7 +30,7 @@
     <ClCompile Include="src\plc_functions.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\plc_task.cpp">
+    <ClCompile Include="src\plc_io.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\msg_queue.cpp">
@@ -46,6 +46,9 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\plc_tcp_server.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="include\plc_io.h">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>

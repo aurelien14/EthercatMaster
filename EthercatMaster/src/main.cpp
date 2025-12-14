@@ -5,7 +5,7 @@
 #include "http_server/civetweb.h"
 
 //Global PLC configuration
-MyPLCApp_conf MyPLCApp_conf;
+extern MyPLCApp_conf PLCApp_conf;
 
 
 //Serveur HTPP
@@ -83,17 +83,14 @@ int main(int argc, char* argv[]) {
     // =========================================================================
 
     // Allouer la mémoire pour vos esclaves
-    system.slave_count = 1;
-    system.slaves = (EcatSlave*)malloc(sizeof(EcatSlave) * system.slave_count);
-
-    if (!system.slaves) {
+    extern EcatSlaveInfo L230_info;
+    if (ecat_system_add_slave(&system, &L230_info)) {
         printf("[MAIN] ERREUR: Allocation mémoire\n");
         ecx_close(&system.ecx_context);
         return -1;
     }
 
     // Initialiser votre esclave L230
-    extern EcatSlaveInfo L230_info;
     ecat_slave_init(&system.slaves[0], &L230_info);
     printf("[MAIN] Esclave L230 ajouté à la configuration\n");
 
@@ -106,13 +103,20 @@ int main(int argc, char* argv[]) {
 
     //ajoute la tache plc
     //MyPLCApp_conf = { 0 };
-    plc_task_manager_add(&plc_task_manager, "tache 1", task_app1, 100, TASK_PRIORITY_NORMAL, &MyPLCApp_conf);
+    plc_task_manager_add(&plc_task_manager, "tache 1", task_app1, 100, TASK_PRIORITY_NORMAL, &PLCApp_conf);
 
     //TODO: trié les taches à l'ajout et enlever l'appel task_manager_sort
     task_manager_sort(&plc_task_manager);
+    
 
     // =========================================================================
-    // ÉTAPE 3: Démarrage du système (config + safe-op + op + threads)
+    // ÉTAPE 4: Initialiser le gestionnaire de tâches
+    // =========================================================================
+    extern void init_plc_map_io(MyPLCApp_conf_t * plc_conf, EcatSlave * slaves, int slave_count);
+    init_plc_map_io(&PLCApp_conf, system.slaves, system.slave_count);
+
+    // =========================================================================
+    // ÉTAPE 5: Démarrage du système (config + safe-op + op + threads)
     // =========================================================================
 
     printf("\n[MAIN] Démarrage du système EtherCAT...\n");
@@ -126,7 +130,7 @@ int main(int argc, char* argv[]) {
 
 
     // =========================================================================
-    // ÉTAPE 4: Boucle principale - Surveillance
+    // ÉTAPE 6: Boucle principale - Surveillance
     // =========================================================================
 
     printf("\n[MAIN] Système en fonctionnement - Appuyez sur Ctrl+C pour arrêter\n\n");
@@ -186,14 +190,14 @@ int main(int argc, char* argv[]) {
 
 
     // =========================================================================
-    // ÉTAPE 5: Arrêt propre
+    // ÉTAPE 7: Arrêt propre
     // =========================================================================
 
     printf("\n[MAIN] Arrêt du système EtherCAT...\n");
 
     // Mettre les sorties à zéro avant l'arrêt
     for (int i = 0; i < system.slave_count; i++) {
-        memset(system.slaves[i].pdo.rx_iomap, 0, system.slaves[i].pdo.rx_size);
+        memset(system.slaves[i].pdo.PDO_rx.iomap, 0, system.slaves[i].pdo.PDO_rx.size);
     }
 
     // Envoyer les sorties à zéro

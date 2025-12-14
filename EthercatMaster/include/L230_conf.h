@@ -73,22 +73,22 @@ typedef struct
 
 	// TxPDO 0x1A02 - X21_CPU_Pt1 
 	struct {
-		float X21_CPU_Pt1_Value;	//0x63A0 (value in ohm)
-		uint32 X21_CPU_Pt1_State;	//0x63B0 (Bit 0 Error PT100)
+		float Pt_Value;	//0x63A0 (value in ohm)
+		uint32 Pt_State;	//0x63B0 (Bit 0 Error PT100)
 	} X21_CPU_Pt1;
 
 
 	// TxPDO 0x1A03 - X21_CPU_Pt2
 	struct {
-		float X21_CPU_Pt2_Value;	//0x63C0 (value in ohm)
-		uint32 X21_CPU_Pt2_State;	//0x63D0 (Bit 0 Error PT100)
-	} X21_CPU_Pt2;
+		float Pt_Value;	//0x63C0 (value in ohm)
+		uint32 Pt_State;	//0x63D0 (Bit 0 Error PT100)
+	} X22_CPU_Pt2;
 
 	// TxPDO 0x1A04 - X21_CPU_VC1 
 	struct {
-		float X23_CPU_VC1_Value;	//0x63C0 (value in V/mA)
-		uint32 X23_CPU_VC1_State;	//0x69C0 (Bit 0 Error U/I)
-	} X21_CPU_VC1;
+		float VC_Value;	//0x63C0 (value in V/mA)
+		uint32 VC_State;	//0x69C0 (Bit 0 Error U/I)
+	} X23_CPU_VC1;
 
 
 	// TxPDO 0x1A05 - L230_DO_Byte1
@@ -105,13 +105,24 @@ typedef struct
 		uint32 L230_FW_Version;
 		uint32 L230_State;
 	} L230Info;
+
 } L230_TX_PDO_t;
 #pragma pack(pop)
 
 
 
-
+/*
 #define L230_OUTPUT(slave)  ((L230_RX_PDO_t*) (slave)->pdo.rx_buf[atomic_load(&(slave)->pdo.active_rx_app)])
 #define L230_INPUT(slave)  ((L230_TX_PDO_t*) (slave)->pdo.tx_buf[atomic_load(&(slave)->pdo.active_rx_app)])
+*/
 
+#if defined TRIPLE_BUFFER_ON_RX
+#define L230_OUTPUT(slave)  ((L230_RX_PDO_t*) (slave)->pdo->PDO_rx.buf[atomic_load(&(slave)->PDO_rx.active_rx_rt)])
+#define L230_INPUT(slave)	((L230_RX_PDO_t*) (slave)->pdo->PDO_tx.iomap)
+#else
+#define L230_OUTPUT(slave)  ((L230_RX_PDO_t*) (slave)->pdo.rx_buf[atomic_load(&(slave)->pdo.active_rx_rt)])
+#define L230_INPUT(slave)  ((L230_TX_PDO_t*) (slave)->pdo.tx_buf[atomic_load(&(slave)->pdo.active_tx_app)])
 
+#define L230_OUTPUT2(pdo)  ((L230_RX_PDO_t*) pdo->rx_buf[atomic_load(&(slave)->pdo.active_rx_rt)])
+#define L230_INPUT2(pdo)  ((L230_TX_PDO_t*) pdo->tx_buf[atomic_load(&(slave)->pdo.active_tx_app)])
+#endif

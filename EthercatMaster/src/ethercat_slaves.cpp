@@ -1,68 +1,73 @@
 #include "ethercat_slaves.h"
 
-void ecat_slave_init(EcatSlave* slave, EcatSlaveInfo* info) {
+void ecat_slave_init(EcatSlave* slave, EcatSlaveInfo* info)
+{
     slave->slave_info = info;
 
-    // Initialiser le triple buffer
-    atomic_store(&slave->pdo.active_rx_app, 0);
-    atomic_store(&slave->pdo.active_tx_rt, 0);
-    atomic_store(&slave->pdo.rx_dirty, false);
+    Slave_PDO_t* pdo = &slave->pdo;
+    Slave_PDO_RX_t* pdo_rx = &pdo->PDO_rx;
+    Slave_PDO_TX_t* pdo_tx = &pdo->PDO_tx;
+
+    // RX : RT lit rx_buf[0] au démarrage
+    atomic_store(&pdo_rx->active_rx_rt, 0);
+
+    // TX : APP lira tx_buf[1]
+    //atomic_store(&pdo_rx->active_tx_app, 1);
+
+    atomic_store(&pdo_rx->dirty, false);
 }
 
-
-/*
-void ecat_slave_iomap(EcatSlave* ecat_slave, ecx_contextt* ctx) {
-    // Mapper les PDO vers notre structure
-    ecat_slave->pdo.rx_iomap = (RX_PDO_t*)ctx->slavelist[ecat_slave->slave_index].outputs;
-    ecat_slave->pdo.tx_iomap = (TX_PDO_t*)ctx->slavelist[ecat_slave->slave_index].inputs;
-#if 0
-    // Initialiser le double buffer
-    atomic_store(&ecat_slave->pdo.active_buf, 0);
-#else
-    // Initialiser le triple buffer
-    atomic_store(&ecat_slave->pdo.active_rx_app, 0);
-    atomic_store(&ecat_slave->pdo.active_tx_rt, 0);
-    atomic_store(&ecat_slave->pdo.rx_dirty, false);
-#endif
-
-    memset(&ecat_slave->pdo.rx_buf, 0, sizeof(ecat_slave->pdo.rx_buf));
-    memset(&ecat_slave->pdo.tx_buf, 0, sizeof(ecat_slave->pdo.tx_buf));
-}
-*/
 
 void ecat_slave_iomap(EcatSlave* slave, ecx_contextt* ctx)
 {
     Slave_PDO_t* pdo = &slave->pdo;
+    Slave_PDO_RX_t* pdo_rx = &pdo->PDO_rx;
+    Slave_PDO_TX_t* pdo_tx = &pdo->PDO_tx;
+
     const EcatSlaveInfo* info = slave->slave_info;
 
-    pdo->rx_size = info->rx_pdo_size;
-    pdo->tx_size = info->tx_pdo_size;
-
-    printf("ecat_slave_iomap tx_size=%d, rx_size=%d\n", pdo->rx_size, pdo->tx_size);
+    pdo_rx->size = info->rx_pdo_size;
+    //pdo->tx_size = info->tx_pdo_size;
 
     for (int i = 0; i < 3; i++) {
-        pdo->rx_buf[i] = calloc(1, pdo->rx_size);
-        pdo->tx_buf[i] = calloc(1, pdo->tx_size);
+        pdo_rx->buf[i] = calloc(1, pdo_rx->size);
+        //pdo->tx_buf[i] = calloc(1, pdo->tx_size);
     }
 
-    pdo->rx_iomap = ctx->slavelist[slave->slave_index].outputs;
-    pdo->tx_iomap = ctx->slavelist[slave->slave_index].inputs;
+    printf("    Esclave %d rx buffers iomap à 0x%p\n", slave->slave_index, pdo_rx->buf);
+    printf("    Esclave %d tx buffers iomap à 0x%p\n", slave->slave_index, pdo_tx->iomap);
+
+    // IOmap SOEM (RT only)
+    pdo_rx->iomap = ctx->slavelist[slave->slave_index].outputs;
+    pdo_tx->iomap = ctx->slavelist[slave->slave_index].inputs;
 }
 
-void ecat_slave_clean(EcatSlave* slave) {
+
+void ecat_slave_clean(EcatSlave* slave)
+{
     Slave_PDO_t* pdo = &slave->pdo;
+    Slave_PDO_RX_t* pdo_rx = &pdo->PDO_rx;
+    Slave_PDO_TX_t* pdo_tx = &pdo->PDO_tx;
+
+    // S'assurer que les threads ont arrêté avant
+    atomic_store(&pdo_rx->dirty, false);
+    atomic_store(&pdo_rx->active_rx_rt, 0);
+    //atomic_store(&pdo->active_tx_app, 0);
+
     for (int i = 0; i < 3; i++) {
-        free(pdo->rx_buf[i]);
-        free(pdo->tx_buf[i]);
-        pdo->rx_buf[i] = NULL;
-        pdo->tx_buf[i] = NULL;
+        free(pdo_rx->buf[i]);
+        //free(pdo->tx_buf[i]);
+        pdo_rx->buf[i] = NULL;
+        //pdo->tx_buf[i] = NULL;
     }
 
-    pdo->rx_size = 0;
-    pdo->tx_size = 0;
-    pdo->rx_iomap = NULL;
-    pdo->tx_iomap = NULL;
-    atomic_store(&pdo->active_rx_app, 0);
-    atomic_store(&pdo->active_tx_rt, 0);
-    atomic_store(&pdo->rx_dirty, false);
+    pdo_rx->size = 0;
+    //pdo->tx_size = 0;
+    pdo_rx->iomap = NULL;
+    pdo_rx->iomap = NULL;
+
+    atomic_store(&pdo_rx->active_rx_rt, 0);
+    atomic_store(&pdo_rx->dirty, false);
+    //atomic_store(&pdo->active_tx_app, 1);
+    
 }

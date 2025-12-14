@@ -156,7 +156,7 @@ unsigned __stdcall ecat_rt_thread(void* arg)
 #endif
             // Copier sorties si nécessaire (non bloquant, buffers pré-alloués)
             for (uint32_t i = 0; i < sys->slave_count; ++i) {
-                if (sys->slaves[i].pdo.rx_dirty)
+                if (sys->slaves[i].pdo.PDO_rx.dirty)
                     ecat_copy_outputs_app_to_rt(&sys->slaves[i].pdo);
             }
 
@@ -165,8 +165,10 @@ unsigned __stdcall ecat_rt_thread(void* arg)
             ecx_receive_processdata(&sys->ecx_context, EC_TIMEOUTRET);
 
             // swap buffers RT->APP
+#if !defined TRIPLE_BUFFER_ON_RX
             for (uint32_t i = 0; i < sys->slave_count; ++i)
                 ecat_swap_buffers_rt_to_app(&sys->slaves[i].pdo);
+#endif
 
             atomic_fetch_add(&sys->cycle_count, 1);
 #if defined WATCHDOG_PLC_TASK
@@ -322,17 +324,17 @@ unsigned __stdcall ecat_rt_thread_old2(void* arg)
         if (watchdog_ok) {
 
             for (uint32_t i = 0; i < sys->slave_count; i++) {
-                if (sys->slaves[i].pdo.rx_dirty)
+                if (sys->slaves[i].pdo.PDO_rx.dirty)
                     ecat_copy_outputs_app_to_rt(&sys->slaves[i].pdo);
             }
 
             ecx_send_processdata(&sys->ecx_context);
             ecx_receive_processdata(&sys->ecx_context, EC_TIMEOUTRET);
-
+#if !defined TRIPLE_BUFFER_ON_RX
             for (uint32_t i = 0; i < sys->slave_count; i++) {
                 ecat_swap_buffers_rt_to_app(&sys->slaves[i].pdo);
             }
-
+#endif
             atomic_fetch_add(&sys->cycle_count, 1);
         }
         else {
@@ -470,6 +472,12 @@ unsigned __stdcall ecat_app_thread(void* arg) {
         // Exécuter les tâches PLC
         plc_task_manager_run(tm);
 
+        //mise à jour desrtination du triple buffering
+        //TODO: voir si on peut optimiser, ne pas executer si pas de modif dans write slave
+        for (int i = 0; i < tm->slave_count; i++) {
+            ecat_commit_app_outputs(&tm->slaves[i].pdo);
+        }
+
         // ====================================================
         // Stats toutes les 10 secondes
         // ====================================================
@@ -585,11 +593,27 @@ int ecat_system_init(EcatSystem* sys, const char* ifname, int cycle_time_us) {
 }
 
 
-int ecat_system_add_slave(EcatSystem* sys, EcatSlaveInfo* info) {
-    // À implémenter selon vos besoins
-    // Allouer et ajouter un esclave dans sys->slaves
+
+int ecat_system_add_slave(EcatSystem* sys, EcatSlaveInfo* info)
+{
+    if (!info) return -1;
+
+    // Réallouer le tableau (croissance simple)
+    int new_count = sys->slave_count + 1;
+    EcatSlave* new_list = (EcatSlave*)realloc(sys->slaves, new_count * sizeof(EcatSlave));
+    if (!new_list) return -1;
+
+    sys->slaves = new_list;
+
+    // Init struct
+    EcatSlave* s = &sys->slaves[sys->slave_count];
+    memset(s, 0, sizeof(*s));
+    ecat_slave_init(s, info); // cf. implémentation ci-dessous
+
+    sys->slave_count = new_count;
     return 0;
 }
+
 
 
 int ecat_system_config(EcatSystem* sys) {
@@ -701,7 +725,7 @@ int ecat_system_transition_to_op(EcatSystem* sys) {
     // IMPORTANT: Mettre les sorties à zéro avant de passer en OP
     // Cela évite des mouvements intempestifs au démarrage
     for (int i = 0; i < sys->slave_count; i++) {
-        memset(sys->slaves[i].pdo.rx_iomap, 0, sys->slaves[i].pdo.rx_size);
+        memset(sys->slaves[i].pdo.PDO_rx.iomap, 0, sys->slaves[i].pdo.PDO_rx.size);
     }
 
     // Envoyer les données avec sorties à zéro (3 fois pour être sûr)
