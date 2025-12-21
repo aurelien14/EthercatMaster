@@ -15,120 +15,73 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\L230_conf.cpp">
+    <ClCompile Include="src\app\main.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\backend\ethercat\ethercat.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\ecat_system.cpp">
+    <ClCompile Include="src\devices\L230\L230_device.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\plc_task_manager.cpp">
+    <ClCompile Include="src\core\device\device.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\plc_functions.cpp">
+    <ClCompile Include="src\devices\L230\L230_device_desc.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\plc_io.cpp">
+    <ClCompile Include="src\core\runtime\runtime.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\msg_queue.cpp">
+    <ClCompile Include="src\config\plc_config.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\ethercat_slaves.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="src\application\plc_app1.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="src\http_server\civetweb.c">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="src\plc_tcp_server.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
-    <ClCompile Include="include\plc_io.h">
+    <ClCompile Include="src\devices\L230\L230_ethercat_desc.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ecat_system.h">
+    <ClInclude Include="src\backend\ethercat\ethercat_slave_desc.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\L230_conf.h">
+    <ClInclude Include="src\config\plc_config.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\plc_task_manager.h">
+    <ClInclude Include="src\devices\L230\L230_device.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\plc_functions.h">
+    <ClInclude Include="src\devices\L230\L230_ethercat_pdo.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\msg_queue.h">
+    <ClInclude Include="src\core\device\device.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\ethercat_slaves.h">
+    <ClInclude Include="src\core\backend\backend.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\plc_app_conf.h">
+    <ClInclude Include="src\backend\ethercat\ethercat.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\http_server\civetweb.h">
+    <ClInclude Include="src\core\runtime\runtime.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\plc_tcp_server.h">
+    <ClInclude Include="src\core\device\device_protocol_desc.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\http_server\handle_form.inl">
+    <ClInclude Include="src\backend\ethercat\ethercat_slave_runtime.h">
       <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\http2.inl">
+    </ClInclude>
+    <ClInclude Include="src\devices\L230\L230_ethercat_desc.h">
       <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\match.inl">
+    </ClInclude>
+    <ClInclude Include="src\devices\L230\L230_device_desc.h">
       <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\md5.inl">
+    </ClInclude>
+    <ClInclude Include="src\config\config.h">
       <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\mod_duktape.inl">
+    </ClInclude>
+    <ClInclude Include="src\core\device\device_desc.h">
       <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\mod_gnutls.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\mod_lua.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\mod_lua_shared.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\mod_mbedtls.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\mod_zlib.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\openssl_dl.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\response.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\sha1.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\sort.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\timer.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
-    <None Include="src\http_server\wolfssl_extras.inl">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </None>
+    </ClInclude>
   </ItemGroup>
 </Project>
