@@ -1,18 +1,17 @@
 #pragma once
 
 #include "core/device/device.h"
-#include "backend/ethercat/ethercat_slave_desc.h"
+#include <stdint.h>
 
 typedef struct {
 	Device_t base;
 
-	/* Descripteur protocolaire sélectionné */
-	const EtherCAT_SlaveDesc_t* ecat_desc;
+	/* états métier L230 */
+	float pt1_value;
+	float pt2_value;
+	float vc1_value;
 
-	/* PDO bindés (runtime) */
-	struct L230_RX_PDO* rx;
-	struct L230_TX_PDO* tx;
-
+	uint32_t status;
 } L230_Device_t;
 
 Device_t* L230_Create(void);

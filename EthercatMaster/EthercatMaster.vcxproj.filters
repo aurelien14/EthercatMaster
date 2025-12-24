@@ -39,11 +39,17 @@
     <ClCompile Include="src\devices\L230\L230_ethercat_desc.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\backend\ethercat\ethercat_bind.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\backend\backend.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\ethercat\ethercat_thread.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\backend\ethercat\ethercat_slave_desc.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="src\config\plc_config.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -65,9 +71,6 @@
     <ClInclude Include="src\core\runtime\runtime.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\device\device_protocol_desc.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="src\backend\ethercat\ethercat_slave_runtime.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -80,7 +83,16 @@
     <ClInclude Include="src\config\config.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\device\device_desc.h">
+    <ClInclude Include="src\backend\ethercat\ethercat_bind.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\ethercat\ethercat_device_desc.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\ethercat\ethercat_thread.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\ethercat\ethercat_config.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

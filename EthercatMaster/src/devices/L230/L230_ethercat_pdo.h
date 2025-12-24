@@ -140,3 +140,4 @@ typedef struct
 #pragma pack(pop)
 
 
+#define L230_PDO_SIZE sizeof(L230_RX_PDO_t) + sizeof(L230_TX_PDO_t)

@@ -21,23 +21,27 @@
   <ItemGroup>
     <ClCompile Include="src\app\main.c" />
     <ClCompile Include="src\backend\ethercat\ethercat.c" />
+    <ClCompile Include="src\backend\ethercat\ethercat_bind.c" />
+    <ClCompile Include="src\backend\ethercat\ethercat_thread.c" />
     <ClCompile Include="src\config\plc_config.c" />
+    <ClCompile Include="src\core\backend\backend.c" />
     <ClCompile Include="src\core\device\device.c" />
     <ClCompile Include="src\devices\L230\L230_device.c" />
-    <ClCompile Include="src\devices\L230\L230_device_desc.c" />
     <ClCompile Include="src\core\runtime\runtime.c" />
+    <ClCompile Include="src\devices\L230\L230_device_desc.c" />
     <ClCompile Include="src\devices\L230\L230_ethercat_desc.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend\ethercat\ethercat_bind.h" />
+    <ClInclude Include="src\backend\ethercat\ethercat_config.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_slave_runtime.h" />
+    <ClInclude Include="src\backend\ethercat\ethercat_thread.h" />
     <ClInclude Include="src\config\config.h" />
     <ClInclude Include="src\core\backend\backend.h" />
     <ClInclude Include="src\backend\ethercat\ethercat.h" />
-    <ClInclude Include="src\backend\ethercat\ethercat_slave_desc.h" />
+    <ClInclude Include="src\backend\ethercat\ethercat_device_desc.h" />
     <ClInclude Include="src\config\plc_config.h" />
     <ClInclude Include="src\core\device\device.h" />
-    <ClInclude Include="src\core\device\device_protocol_desc.h" />
-    <ClInclude Include="src\core\device\device_desc.h" />
     <ClInclude Include="src\devices\L230\L230_device.h" />
     <ClInclude Include="src\devices\L230\L230_device_desc.h" />
     <ClInclude Include="src\devices\L230\L230_ethercat_desc.h" />
@@ -98,11 +102,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(PublicIncludeDirectories);C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\build\default\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32\wpcap\Include;$(ProjectDir)\src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(PublicIncludeDirectories);C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\build\default\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32\wpcap\Include;$(ProjectDir)src</IncludePath>
     <LibraryPath>C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\build\default\Debug;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32\wpcap\Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(PublicIncludeDirectories);C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\build\default\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32\wpcap\Include;$(ProjectDir)\src</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(PublicIncludeDirectories);C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\build\default\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\include;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\osal\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32\wpcap\Include;$(ProjectDir)src</IncludePath>
     <LibraryPath>C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\build\default\Release;C:\Users\sapratin\Documents\c_projects\lib\SOEM_master\oshw\win32\wpcap\Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -146,6 +150,8 @@
       <PreprocessorDefinitions>NO_SSL;DMG_NO_SSL;DMG_MAX_HTTP_HEADERS=32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_XKEYCHECK_H</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <AdditionalOptions>/experimental:c11atomics %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,6 +169,8 @@
       <PreprocessorDefinitions>NO_SSL;DMG_NO_SSL;DMG_MAX_HTTP_HEADERS=32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_XKEYCHECK_H</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <AdditionalOptions>/experimental:c11atomics %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

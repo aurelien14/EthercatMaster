@@ -1,7 +1,7 @@
 #pragma once
-#include "core/device/device_desc.h"
-#include "core/device/device_protocol_desc.h"
-
+#include "core/device/device.h"
+#include "backend/ethercat/ethercat_config.h"
+#include <stdint.h>
 /*
 typedef enum {
 	BACKEND_ETHERCAT,
@@ -10,13 +10,12 @@ typedef enum {
 } BackendType_t;
 */
 
+
 typedef struct BackendConfig {
 	ProtocolType_t type;
 	const char* name;    // ex: "ec0", "modbus1", etc
 	union {
-		struct {
-			const char* ifname;  // ex: "eth0"
-		} ethercat;
+		EtherCAT_config_t ethercat;
 		struct {
 			const char* ip_address;
 			uint16_t port;

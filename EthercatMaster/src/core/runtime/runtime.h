@@ -25,11 +25,12 @@ typedef struct {
 #endif
 
 typedef struct {
-		BackendDriver_t* backends[MAX_BACKENDS];
-		int backend_count;
+	BackendDriver_t* backends[MAX_BACKENDS];
+	int backend_count;
 
-		Device_t* devices[MAX_DEVICES];
-		int device_count;
+	Device_t* devices[MAX_DEVICES];
+	int device_count;
+	long system_is_running;
 } Runtime_t;
 
 
@@ -37,7 +38,7 @@ typedef struct {
 Runtime_t* create_runtime(void);
 
 int runtime_init(Runtime_t *runtime, PLCSystemConfig_t *plc_config);
-void runtime_start(void); //Runtime_t*
-int runtime_process(Runtime_t*);
+void runtime_start(Runtime_t* runtime);
+void runtime_process(Runtime_t*);
 void runtime_stop(Runtime_t*);
 void runtime_cleanup(Runtime_t*);

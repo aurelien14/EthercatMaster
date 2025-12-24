@@ -11,9 +11,11 @@ static const BackendConfig_t system_backends[] =
 		.type = PROTO_ETHERCAT,
 		.name = "ec0",
 		.ethercat = {
-			.ifname = "\\Device\\NPF_{FB092E67-7CA1-4E8F-966D-AC090D396487}"
+			.ifname = "\\Device\\NPF_{FB092E67-7CA1-4E8F-966D-AC090D396487}",
+			.cycle_us = 1000,
+			.io_map_size = 4096,
 		}
-	}
+	},
 };
 
 static const DeviceConfig_t system_devices[] = {
@@ -23,14 +25,6 @@ static const DeviceConfig_t system_devices[] = {
 		.backend_name = "ec0",
 		.ethercat = {
 			.expected_position = 1
-		}
-	},
-	{
-		.device_name = "L230_2",
-		.device_desc = &L230_DEVICE_DESC,
-		.backend_name = "ec0",
-		.ethercat = {
-			.expected_position = 2
 		}
 	},
 

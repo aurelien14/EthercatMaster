@@ -1,8 +1,6 @@
-#include "l230_ethercat_desc.h"
-#include "l230_ethercat_pdo.h"
-#include "backend/ethercat/ethercat_slave_desc.h"
-#include <soem/soem.h>
+#include "L230_ethercat_desc.h"
 #include <stdio.h>
+#include <soem/soem.h>
 
 static int config_hook_EL230(ecx_contextt* ctx, uint16_t slave)
 {
@@ -20,10 +18,14 @@ static int config_hook_EL230(ecx_contextt* ctx, uint16_t slave)
 	return 1;
 }
 
-const EtherCAT_SlaveDesc_t L230_ECAT_DESC = {
+
+/* Descripteur EtherCAT */
+const EtherCAT_DeviceDesc_t L230_ECAT_DESC = {
 	.vendor_id = 0x3213335,
 	.product_code = 0x47535953,
+
 	.rx_pdo_size = sizeof(L230_RX_PDO_t),
 	.tx_pdo_size = sizeof(L230_TX_PDO_t),
+
 	.config_hook = config_hook_EL230
 };

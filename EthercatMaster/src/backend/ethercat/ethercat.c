@@ -1,7 +1,82 @@
 #include "ethercat.h"
-#include "ethercat_slave_runtime.h"
+
+#include "ethercat_device_desc.h"
+#include "ethercat_thread.h"
+#include "config/config.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+
+int ethercat_transition_safeop(EtherCAT_Driver_t* ec)
+{
+	printf("[ECAT] Passage en SAFE-OP...\n");
+
+	ec->ctx.slavelist[0].state = EC_STATE_SAFE_OP;
+	ecx_writestate(&ec->ctx, 0);
+
+	int chk = 200;
+	do {
+		ecx_statecheck(&ec->ctx, 0, EC_STATE_SAFE_OP, 50000);
+	} while (chk-- &&
+		(ec->ctx.slavelist[0].state != EC_STATE_SAFE_OP));
+
+	if (ec->ctx.slavelist[0].state != EC_STATE_SAFE_OP) {
+		printf("[ECAT] ERREUR SAFE-OP\n");
+		for (int i = 1; i <= ec->ctx.slavecount; i++) {
+			if (ec->ctx.slavelist[i].state != EC_STATE_SAFE_OP) {
+				printf("  Slave %d bloqué en 0x%02x\n",
+					i, ec->ctx.slavelist[i].state);
+			}
+		}
+		return -1;
+	}
+
+	printf("[ECAT] Tous les esclaves en SAFE-OP\n");
+	return 0;
+}
+
+
+int ethercat_transition_op(EtherCAT_Driver_t* ec)
+{
+	printf("[ECAT] Mise à zéro des sorties...\n");
+
+	memset(ec->iomap, 0, ec->iomap_size);
+
+	for (int i = 0; i < 3; i++) {
+		ecx_send_processdata(&ec->ctx);
+		ecx_receive_processdata(&ec->ctx, EC_TIMEOUTRET);
+		Sleep(2);
+	}
+
+	printf("[ECAT] Passage en OPERATIONAL...\n");
+
+	ec->ctx.slavelist[0].state = EC_STATE_OPERATIONAL;
+	ecx_writestate(&ec->ctx, 0);
+
+	int chk = 200;
+	do {
+		ecx_send_processdata(&ec->ctx);
+		ecx_receive_processdata(&ec->ctx, EC_TIMEOUTRET);
+		ecx_statecheck(&ec->ctx, 0,
+			EC_STATE_OPERATIONAL, 50000);
+	} while (chk-- &&
+		(ec->ctx.slavelist[0].state != EC_STATE_OPERATIONAL));
+
+	if (ec->ctx.slavelist[0].state != EC_STATE_OPERATIONAL) {
+		printf("[ECAT] ERREUR OPERATIONAL\n");
+		for (int i = 1; i <= ec->ctx.slavecount; i++) {
+			if (ec->ctx.slavelist[i].state != EC_STATE_OPERATIONAL) {
+				printf("  Slave %d bloqué en 0x%02x\n",
+					i, ec->ctx.slavelist[i].state);
+			}
+		}
+		return -1;
+	}
+
+	printf("[ECAT] Tous les esclaves en OPERATIONAL\n");
+	return 0;
+}
+
 
 static void print_available_adapters(void) {
 	ec_adaptert* adapter = NULL;
@@ -18,41 +93,60 @@ static void print_available_adapters(void) {
 }
 
 
-static int ethercat_init(BackendDriver_t* b)
+static int ethercat_init(BackendDriver_t* b) {
+	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+
+	if (!QueryPerformanceFrequency(&d->qpc_freq)) {
+		printf("[ECAT] QueryPerformanceFrequency failed\n");
+		return -1;
+	}
+
+	if (d->qpc_freq.QuadPart == 0) {
+		printf("[ECAT] Invalid QPC frequency\n");
+		return -1;
+	}
+
+	printf("[ECAT] QPC freq = %lld Hz\n", d->qpc_freq.QuadPart);
+
+	if (ecx_config_init(&d->ctx) <= 0) {
+		printf("[ECAT] No slaves found\n");
+		return -1;
+	}
+	
+	d->iomap = calloc(1, d->iomap_size);
+	if (!d->iomap) {
+		printf("[ECAT] Unable to allocate IOmap\n");
+		return -1;
+	}
+
+	printf("[ECAT] %d slaves detected\n", d->ctx.slavecount);
+	return 0;
+}
+
+
+static int ethercat_start(BackendDriver_t* b)
 {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 
-	if (ecx_config_init(&d->ctx) <= 0)
-		return -1;
+	//ethercat_transition_safeop(d); //fait dans ethercat_finalize_mapping
+	ethercat_transition_op(d);
 
-	if (d->ctx.slavecount != d->slave_count)
-		return -1;
+	ethercat_start_thread(d);
+	return 0;
+}
 
-	for (size_t i = 0; i < d->slave_count; i++) {
+static int ethercat_stop(BackendDriver_t* b)
+{
+	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+	ethercat_stop_thread(d);
 
-		Device_t* dev = b->devices[i];
-
-		const DeviceProtocolDesc_t* pdesc =
-			device_find_protocol_desc(dev->desc, PROTO_ETHERCAT);
-
-		const EtherCAT_DeviceDesc_t* ecat_desc =
-			(const EtherCAT_DeviceDesc_t*)pdesc->hw_desc;
-
-		ec_slavet* s = &d->ctx.slavelist[i + 1];
-
-		if (s->eep_man != ecat_desc->vendor_id ||
-			s->eep_id != ecat_desc->product_code)
-			return -1;
-
-		if (ecat_desc->config_hook)
-			ecat_desc->config_hook(i + 1);
-
-		// liaison PDO
-		...
-	}
+	d->ctx.slavelist[0].state = EC_STATE_SAFE_OP;
+	ecx_writestate(&d->ctx, 0);
+	ecx_statecheck(&d->ctx, 0, EC_STATE_SAFE_OP, 200000);
 
 	return 0;
 }
+
 
 
 static int ethercat_process(BackendDriver_t* b) {
@@ -62,38 +156,66 @@ static int ethercat_process(BackendDriver_t* b) {
 	return 0;
 }
 
-static void ethercat_destroy(BackendDriver_t* b) {
 
+static void ethercat_destroy(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 	free(d->iomap);
-	for (int i = 0; i < d->slave_count; i++) {
+	for (size_t i = 0; i < d->slave_count; i++)
 		free(d->slaves[i]);
-	}
 	free(d);
 }
 
-static BackendDriverOps_t ops = {
+
+static const BackendDriverOps_t ops = {
 	.init = ethercat_init,
+	.start = ethercat_start,
+	.stop = ethercat_stop,
 	.process = ethercat_process,
 	.destroy = ethercat_destroy
 };
 
 
-EtherCAT_Driver_t* EtherCAT_Driver_Create(const char* ifname) {
+EtherCAT_Driver_t* EtherCAT_Driver_Create(EtherCAT_config_t *config, int ethercat_index)
+{
 	EtherCAT_Driver_t* d = calloc(1, sizeof(*d));
-	if (d == NULL) {
+	if (!d)
 		return NULL;
-	}
-	d->base.name = "EtherCAT";
+	snprintf(d->base.name, sizeof(d->base.name), "ec%d", ethercat_index);
+	d->base.protocol = PROTO_ETHERCAT;
 	d->base.ops = &ops;
-	d->base.is_initialized = 0;
-	d->base.ref_count = 0;
+	d->thread_cycle_us = config->cycle_us;
+	d->iomap_size = config->io_map_size;
 
-	if (!ecx_init(&d->ctx, ifname)) {
-		printf("[%s] Failed to initialize EtherCAT context on interface %s\n", d->base.name, ifname);
-		print_available_adapters();
+	if (!ecx_init(&d->ctx, config->ifname)) {
 		free(d);
 		return NULL;
 	}
 	return d;
 }
+
+
+int ethercat_finalize_mapping(EtherCAT_Driver_t* ec) {
+	int size = ecx_config_map_group(&ec->ctx, ec->iomap, 0);
+
+	if (size == 0) {
+		printf("[CONFIG] erreur pendant le mapping");
+		return -1;
+	}
+	if (size > ec->iomap_size) {
+		printf("[CONFIG] tableau IOmap trop petit, taille:%llu, requière:%d", (unsigned long long)ec->iomap_size, size);
+		return -1;
+	}
+
+	for (int i = 0; i < ec->slave_count; i++) {
+		EtherCAT_SlaveRuntime_t* ecat_rt = ec->slaves[i];
+		ec_slavet* sl = &ec->ctx.slavelist[i + 1];
+		ecat_rt->tx_pdo = sl->inputs;
+		ecat_rt->rx_pdo = sl->outputs;
+	}
+
+	ecx_configdc(&ec->ctx);
+
+	ethercat_transition_safeop(ec);
+	return 0;
+}
+

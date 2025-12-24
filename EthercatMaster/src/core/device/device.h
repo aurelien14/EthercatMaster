@@ -1,17 +1,26 @@
 #pragma once
+#include <stddef.h>
 
-#include "device_desc.h"
+typedef enum {
+	PROTO_ETHERCAT = 0,
+	/*PROTO_MODBUS,
+	PROTO_TCP,
+	PROTO_MODBUS_RTU,
+	PROTO_TCP_CUSTOM,*/
+	PROTO_COUNT
+} ProtocolType_t;
 
-/* Device runtime (instance dans le système) */
+
+typedef struct {
+	const char* model;
+	ProtocolType_t protocol;
+	const void* hw_desc;
+} DeviceDesc_t;
+
 typedef struct Device {
-	const char* name;           /* "MainIO", "ExtIO1" */
-	const DeviceDesc_t* desc;   /* L230_DEVICE_DESC */
-	ProtocolType_t protocol;        /* protocole réellement utilisé */
-
-	void* backend_handle;       /* pointeur opaque vers le backend */
-	void* userdata;             /* pointeur vers struct spécifique (L230_Device_t*) */
+	const char* name;
+	const DeviceDesc_t* desc;
+	void* backend_handle;
+	void* protocol_runtime;
+	void* dev;
 } Device_t;
-
-
-const DeviceProtocolDesc_t*
-device_find_protocol_desc(const DeviceDesc_t* desc, ProtocolType_t proto);

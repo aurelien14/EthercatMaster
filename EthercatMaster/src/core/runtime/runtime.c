@@ -1,68 +1,61 @@
 #include "config/config.h"
 #include "runtime.h"
 #include "backend/ethercat/ethercat.h"
+#include "backend/ethercat/ethercat_bind.h"
 #include <stdlib.h>
+//#include <ctype.h>
 
-//TODO: make it dynamic in a structure and use it as argument in runtime_start
-//static BackendDriver_t* backend_drivers[MAX_BACKENDS_DRIVERS];
-//static int backend_driver_count = 0;
+static Device_t* runtime_create_device(DeviceDesc_t* device_desc, const char *name) {
+	Device_t* dev = calloc(1, sizeof(Device_t));
+	if (dev != NULL) {
+		dev->desc = device_desc;
+		dev->name = name;
+	}
+	return dev;
+}
 
-static size_t runtime_get_device_count(const char* backend_name, DeviceConfig_t* device_cfg, size_t len) {
-	size_t count = 0;
-	for (int i = 0; i < len; i++) {
-		if (strcpy(device_cfg[i].backend_name, backend_name) == 0) {
-			count++;
+
+static int runtime_get_backend_index(const char* backend_name) {
+	if(backend_name == NULL) {
+		return -1;
+	}
+	while (*backend_name && !isdigit(*backend_name)) {
+		backend_name++;
+	}
+	if (*backend_name == 0)
+		return -1;
+
+	char* end = NULL;
+	long index = strtol(backend_name, end, 10);
+	if (end == backend_name || index < 0) {
+		return -1;
+	}
+	return (int)index;
+}
+
+
+static BackendDriver_t* runtime_create_backend(Runtime_t* runtime, BackendConfig_t* drv_cfg) {
+	if (drv_cfg->type == PROTO_ETHERCAT) {
+		int i = runtime_get_backend_index(drv_cfg->name);
+		BackendDriver_t* drv = EtherCAT_Driver_Create(&drv_cfg->ethercat, i);
+		if (drv == NULL) {
+			printf("[RUNTIME] Unable to create backend %s\n", drv_cfg->name);
 		}
+		return drv;
+	}
+	else {
+		printf("[RUNTIME] Unsupported backend type %d\n", drv_cfg->type);
+		return NULL;
 	}
 }
 
-static const BackendDriver_t* runtime_get_backend_driver(Runtime_t *runtime, BackendConfig_t* backend_cfg) {
-	BackendDriver_t* drv = NULL;
-
+static BackendDriver_t* runtime_find_backend(Runtime_t* runtime, const char* backend_name) {
 	for (size_t i = 0; i < runtime->backend_count; i++) {
-		if (runtime->backends[i]->config == backend_cfg) {
-			printf("[RUNTIME] Backend %s already initialized\n", backend_cfg->name);
+		if (strcmp(runtime->backends[i]->name, backend_name) == 0) {
 			return runtime->backends[i];
 		}
 	}
-
-	switch (backend_cfg->type) {
-		case PROTO_ETHERCAT:
-			drv = (BackendDriver_t*) EtherCAT_Driver_Create(backend_cfg->ethercat.ifname);
-			break;
-	}
-
-	if (drv == NULL) {
-		printf("[RUNTIME] Unable to allocate memory for backend %s", backend_cfg->name);
-		return NULL;
-	}
-
-	drv->config = backend_cfg;
-	runtime->backends[runtime->backend_count++] = drv;
-	return drv;
-}
-
-
-static Device_t* runtime_get_device(DeviceConfig_t* dev_cfg) {
-	Device_t* dev = NULL;
-	DeviceProtocolDesc_t* desc = (DeviceProtocolDesc_t*)device_find_protocol_desc(dev_cfg->device_desc, PROTO_ETHERCAT);
-	if (desc == NULL) {
-		printf("[RUNTIME] Protocol description not found for device %s\n", dev_cfg->device_name);
-		return NULL;
-	}
-	if (strcmp(dev_cfg->device_desc->model, "L230") == 0) {
-		dev = L230_Create();
-		if (dev == NULL) {
-			printf("[RUNTIME] unable to allocate memory for device %s", dev_cfg->device_desc->model);
-			return -1;
-		}
-		dev->name = dev_cfg->device_name;
-		dev->desc = dev_cfg->device_desc;
-		dev->protocol = desc->protocol;
-		dev->backend_handle = NULL;
-	}
-
-	return dev;
+	return NULL;
 }
 
 
@@ -78,55 +71,69 @@ Runtime_t *create_runtime(void) {
 
 
 int runtime_init(Runtime_t *runtime, PLCSystemConfig_t* plc_config) {
-	//initialize backends
-	for (size_t i = 0; i < plc_config->backend_count; i++) {
-		BackendConfig_t* dev_cfg = &plc_config->backends[i];
-		size_t dev_count = runtime_get_device_count(dev_cfg->name, plc_config->devices, plc_config->device_count);
+	if (runtime == NULL || plc_config == NULL) {
+		return -1;
+	}
 
-		BackendDriver_t *drv = runtime_get_backend_driver(runtime, dev_cfg);
-		if (drv == NULL) {
-			return -1;
-		}
-
-		runtime->backends[runtime->backend_count++] = drv;
-		//initialize backend if not already done
-		if (!drv->is_initialized) {
+	// 1. Initialize backends
+	for (int i = 0; i < plc_config->backend_count; i++) {
+		BackendConfig_t* drv_cfg = &plc_config->backends[i];
+		BackendDriver_t* drv = runtime_create_backend(runtime, drv_cfg);
+		if(drv) {
 			int ret = drv->ops->init(drv);
 			if (ret < 0) {
-				return ret;
+				printf("[RUNTIME] Unable to initialize backend %s\n", drv_cfg->name);
+				return -1;
 			}
-			drv->is_initialized = 1;
+			runtime->backends[runtime->backend_count++] = drv;
 		}
-
-		drv->ref_count++;
 	}
 
-	//initialize devices
-#if 0
+
+	//2. Initialize devices
 	for (size_t i = 0; i < plc_config->device_count; i++) {
-		DeviceConfig_t* dev_cfg = &plc_config->devices[i];
-		Device_t* dev = runtime_get_device(dev_cfg);
+		Device_t* dev = runtime_create_device(plc_config->devices[i].device_desc, plc_config->devices[i].device_name);
 		if (dev == NULL) {
-			printf("[RUNTIME] Unable to create device %s\n", dev_cfg->device_name);
-			return -1;
-		}
-		//link device to backend
-		for (size_t j = 0; j < backend_driver_count; j++) {
-			if (backend_drivers[j]->config->name == dev_cfg->backend_name) {
-				dev->backend_handle = (void*) backend_drivers[j];
-				break;
-			}
-		}
-		if (dev->backend_handle == NULL) {
-			printf("[RUNTIME] Unable to find backend %s for device %s\n", dev_cfg->backend_name, dev_cfg->device_name);
-			free(dev);
+			printf("[RUNTIME] Impossible de créer le device %s\n", plc_config->devices[i].device_name);
 			return -1;
 		}
 
-		printf("[RUNTIME] Device %s initialized\n", dev_cfg->device_name);
+		BackendDriver_t* drv = runtime_find_backend(runtime, plc_config->devices[i].backend_name);
+		if (drv == NULL) {
+			printf("[RUNTIME] Backend %s introuvable pour le device %s\n", plc_config->devices[i].backend_name, dev->name);
+			return -1;
+		}
+
+		if (drv->protocol == PROTO_ETHERCAT) {
+			ethercat_bind_device((EtherCAT_Driver_t*)drv, dev, &plc_config->devices[i]);
+		} 
+		else {
+			printf("[RUNTIME] Protocole non supporté %d pour le device %s\n", drv->protocol, dev->name);
+			return -1;
+		}
+
+		dev->backend_handle = drv;
+		runtime->devices[runtime->device_count++] = dev;
+
 	}
 
-#endif
+
+	//3. Finalize backend mappings for Ethercat
+	for(size_t i = 0; i < runtime->backend_count; i++) {
+		BackendDriver_t* drv = runtime->backends[i];
+		if (drv != NULL) {
+			if (drv->protocol == PROTO_ETHERCAT) {
+				Sleep(1000);
+				ethercat_finalize_mapping((EtherCAT_Driver_t*)drv);
+			}
+		}
+		else {
+			printf("[RUNTIME] Backend null lors de la finalisation du mapping\n");
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 
@@ -135,4 +142,41 @@ void runtime_start(Runtime_t* runtime) {
 		BackendDriver_t* drv = runtime->backends[i];
 		drv->ops->start(drv);
 	}
+	runtime->system_is_running = 1;
+}
+
+
+void runtime_process(Runtime_t* runtimet) {
+	return;
+}
+
+
+void runtime_stop(Runtime_t* runtime) {
+	if (runtime == NULL) {
+		return;
+	}
+	//stopper les backends drivers
+	for (size_t i = 0; i < runtime->backend_count; i++) {
+		BackendDriver_t* drv = runtime->backends[i];
+		drv->ops->stop(drv);
+	}
+	runtime->system_is_running = 0;
+}
+
+
+void runtime_cleanup(Runtime_t* runtime) {
+	if (runtime == NULL) {
+		return;
+	}
+	// Libérer les devices
+	for (size_t i = 0; i < runtime->device_count; i++) {
+		Device_t* dev = runtime->devices[i];
+		free(dev);
+	}
+	// Libérer les backends
+	for (size_t i = 0; i < runtime->backend_count; i++) {
+		BackendDriver_t* drv = runtime->backends[i];
+		drv->ops->destroy(drv);
+	}
+	free(runtime);
 }

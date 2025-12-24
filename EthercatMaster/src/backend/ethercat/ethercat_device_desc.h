@@ -1,10 +1,9 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <soem/soem.h>
 
-
-typedef int (*config_slave_hook)(ecx_contextt* ctx, uint16 slave);
 
 typedef struct {
 	uint32_t vendor_id;
@@ -13,6 +12,5 @@ typedef struct {
 	size_t rx_pdo_size;
 	size_t tx_pdo_size;
 
-	config_slave_hook config_hook;
-
-} EtherCAT_SlaveDesc_t;
+	int (*config_hook)(ecx_contextt* ctx, uint16_t slave);
+} EtherCAT_DeviceDesc_t;

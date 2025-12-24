@@ -10,8 +10,9 @@ Device_t* L230_Create(void)
 		return NULL;
 
 	dev->base.name = "L230";
-	dev->base.userdata = dev;
-	dev->base.desc = &L230_DEVICE_DESC;
+	dev->base.dev = dev;
+	dev->base.desc = (DeviceDesc_t*)&L230_DEVICE_DESC;
 
 	return &dev->base;
 }
+
