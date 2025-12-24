@@ -1,5 +1,4 @@
 #include "ethercat.h"
-
 #include "ethercat_device_desc.h"
 #include "ethercat_thread.h"
 #include "config/config.h"
@@ -93,6 +92,20 @@ static void print_available_adapters(void) {
 }
 
 
+static void ethercat_stats_init(EtherCAT_Driver_t* d)
+{
+	d->stats.cycle_time_us = d->thread_cycle_us;
+	d->stats.min_cycle_time_us = UINT32_MAX;
+	d->stats.max_cycle_time_us = 0;
+
+	d->stats.min_jitter_us = UINT32_MAX;
+	d->stats.max_jitter_us = 0;
+
+	d->stats.jitter_us = 0;
+	d->stats.total_cycles = 0;
+}
+
+
 static int ethercat_init(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 
@@ -107,6 +120,8 @@ static int ethercat_init(BackendDriver_t* b) {
 	}
 
 	printf("[ECAT] QPC freq = %lld Hz\n", d->qpc_freq.QuadPart);
+
+	ethercat_stats_init(d);
 
 	if (ecx_config_init(&d->ctx) <= 0) {
 		printf("[ECAT] No slaves found\n");
@@ -151,8 +166,8 @@ static int ethercat_stop(BackendDriver_t* b)
 
 static int ethercat_process(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
-	ecx_send_processdata(&d->ctx);
-	ecx_receive_processdata(&d->ctx, EC_TIMEOUTRET);
+	//ecx_send_processdata(&d->ctx);
+	//ecx_receive_processdata(&d->ctx, EC_TIMEOUTRET);
 	return 0;
 }
 

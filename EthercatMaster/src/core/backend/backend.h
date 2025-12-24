@@ -1,7 +1,8 @@
 #pragma once
 #include <stddef.h>
-#include "core/device/device.h"
+#include "core/device/device_desc.h"
 
+#define MAX_BACKENDS_DRIVERS  3
 #define MAX_BACKEND_DEVICES 32
 
 typedef struct BackendDriver BackendDriver_t;
@@ -14,15 +15,13 @@ typedef struct {
 	void (*destroy)(BackendDriver_t*);
 } BackendDriverOps_t;
 
+
 struct BackendDriver {
-	const char name[8];
+	char name[8];
 	ProtocolType_t protocol;
 
 	const BackendDriverOps_t* ops;
 
-	int is_initialized;
-	int ref_count;
+	/*int is_initialized;
+	int ref_count;*/
 };
-
-
-BackendDriver_t* create_backend_by_proto[PROTO_COUNT];

@@ -2,8 +2,8 @@
 #include "runtime.h"
 #include "backend/ethercat/ethercat.h"
 #include "backend/ethercat/ethercat_bind.h"
+#include "app/plc_tasks.h"
 #include <stdlib.h>
-//#include <ctype.h>
 
 static Device_t* runtime_create_device(DeviceDesc_t* device_desc, const char *name) {
 	Device_t* dev = calloc(1, sizeof(Device_t));
@@ -133,6 +133,16 @@ int runtime_init(Runtime_t *runtime, PLCSystemConfig_t* plc_config) {
 		}
 	}
 
+	//4. Init PLC tasks Scheduler
+	scheduler_init(&runtime->plc, SCHEDULER_BASE_CYCLE_US);
+	scheduler_add_task(&runtime->plc,
+		&(PLC_Task_t){
+			.name = "FAST",
+			.period_us = 1000,
+			.run = plc_task1_run,
+			.context = runtime
+	});
+
 	return 0;
 }
 
@@ -142,11 +152,36 @@ void runtime_start(Runtime_t* runtime) {
 		BackendDriver_t* drv = runtime->backends[i];
 		drv->ops->start(drv);
 	}
+	scheduler_start(&runtime->plc);
 	runtime->system_is_running = 1;
 }
 
 
-void runtime_process(Runtime_t* runtimet) {
+void runtime_process(Runtime_t* runtime) {
+	if (runtime == NULL)
+		return;
+	
+
+	for (int i = 0; i < runtime->backend_count; i++) {
+		BackendDriver_t* drv = runtime->backends[i];
+		if (drv->ops->process)
+			drv->ops->process(drv);
+
+		if (drv->protocol == PROTO_ETHERCAT) {
+			EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)drv;
+			/*printf("[ECAT] cycles=%llu cycle[min/max]=%u/%u us jitter[min/max]=%u/%u us\n",
+				d->stats.total_cycles,
+				d->stats.min_cycle_time_us,
+				d->stats.max_cycle_time_us,
+				d->stats.min_jitter_us,
+				d->stats.max_jitter_us);*/
+			printf("[ECAT] jitter: %u us\n",
+				d->stats.jitter_us);
+		}
+	}
+
+
+
 	return;
 }
 
@@ -155,6 +190,9 @@ void runtime_stop(Runtime_t* runtime) {
 	if (runtime == NULL) {
 		return;
 	}
+	//stopper le scheduler
+	//scheduler_stop(&runtime->plc);
+
 	//stopper les backends drivers
 	for (size_t i = 0; i < runtime->backend_count; i++) {
 		BackendDriver_t* drv = runtime->backends[i];

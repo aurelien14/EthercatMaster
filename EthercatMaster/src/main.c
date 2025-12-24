@@ -3,7 +3,7 @@
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
-#include "config/plc_config.h"
+#include "app/plc_config.h"
 #include "core/runtime/runtime.h"
 
 static Runtime_t* p_runtime = NULL;
@@ -50,9 +50,10 @@ int main(int argc, char* argv[])
 
 	runtime_start(p_runtime);
 
+
 	while (InterlockedCompareExchange(&p_runtime->system_is_running, 1, 1)) {
 		runtime_process(p_runtime);
-		Sleep(1); // évite un busy loop CPU
+		Sleep(1000); // Toutes les 5 secondes
 	}
 
 	runtime_stop(p_runtime);

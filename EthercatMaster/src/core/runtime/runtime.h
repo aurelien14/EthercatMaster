@@ -1,8 +1,8 @@
 #pragma once
-
-#include "core/backend/backend.h"
+#include "app/plc_config.h"
 #include "core/device/device.h"
-#include "config/plc_config.h"
+#include "core/backend/backend.h"
+#include "core/scheduler/scheduler.h"
 
 #define MAX_BACKENDS 8
 #define MAX_DEVICES  64
@@ -30,7 +30,11 @@ typedef struct {
 
 	Device_t* devices[MAX_DEVICES];
 	int device_count;
+
+	Scheduler_t plc;
+
 	long system_is_running;
+
 } Runtime_t;
 
 

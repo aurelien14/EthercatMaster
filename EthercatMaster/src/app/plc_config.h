@@ -1,14 +1,10 @@
 #pragma once
-#include "core/device/device.h"
+#include "core/device/device_desc.h"
+#include "core/scheduler/task.h"
 #include "backend/ethercat/ethercat_config.h"
+#include "core/plc/tags.h"
 #include <stdint.h>
-/*
-typedef enum {
-	BACKEND_ETHERCAT,
-	BACKEND_MODBUS,
-	BACKEND_TCP
-} BackendType_t;
-*/
+
 
 
 typedef struct BackendConfig {
@@ -52,6 +48,14 @@ typedef struct {
 
 
 typedef struct {
+	PLC_TaskFunc plc_task;
+	const char* name;
+	uint32_t period_us;
+} PLC_TaskConfig_t;
+
+
+
+typedef struct {
 	BackendConfig_t* backends;
 	size_t backend_count;
 	DeviceConfig_t* devices;
@@ -59,5 +63,13 @@ typedef struct {
 } PLCSystemConfig_t;
 
 
+typedef struct {
+	const char* name;
+
+	//.name = "X15_Out0"
+	//type = TAG_BOOL,
+	//addr = &((L230_RX_PDO_t*)dev->rx_iomap)->L230_DO_Byte0_bits.X15_Out0
+	//}
+}PLCTagsConf_t;
 
 extern PLCSystemConfig_t plc_system_config;

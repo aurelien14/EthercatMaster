@@ -1,7 +1,7 @@
 #include "ethercat_bind.h"
 #include "ethercat_device_desc.h"
 #include "ethercat_slave_runtime.h"
-#include "config/plc_config.h"
+#include "app/plc_config.h"
 #include <stdlib.h>
 
 int ethercat_bind_device(EtherCAT_Driver_t* d, Device_t* dev, const DeviceConfig_t* cfg)

@@ -57,3 +57,4 @@ PLCSystemConfig_t plc_system_config = {
 	.device_count = sizeof(system_devices) / sizeof(system_devices[0])
 };
 
+
