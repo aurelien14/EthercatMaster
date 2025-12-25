@@ -1,5 +1,6 @@
 #include "config/config.h"
 #include "scheduler_thread.h"
+#include "core/plateform/plateform_detect.h"
 #include "utils/threads_utils.h"
 
 static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
@@ -13,7 +14,7 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 	const int64_t base_ticks =
 		(s->base_cycle_us * s->qpc_freq.QuadPart) / 1000000LL;
 
-	while (InterlockedCompareExchange(&s->running, 1, 1)) {
+	while (atomic_cas_i32(&s->running, 1, 1)) {
 
 		QueryPerformanceCounter(&now);
 
@@ -55,13 +56,13 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 
 void scheduler_start_thread(Scheduler_t* s)
 {
-	InterlockedExchange(&s->running, 1);
+	atomic_exchange_i32(&s->running, 1);
 	osal_thread_create(&s->thread, 128000, scheduler_thread, s);
 }
 
 
 void scheduler_stop_thread(Scheduler_t* s)
 {
-	InterlockedExchange(&s->running, 0);
+	atomic_exchange_i32(&s->running, 0);
 	WaitForSingleObject(s->thread, INFINITE);
 }

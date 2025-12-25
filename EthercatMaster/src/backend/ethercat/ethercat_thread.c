@@ -1,5 +1,6 @@
 #include "ethercat.h"
 #include "config/config.h"
+#include "core/plateform/plateform.h"
 #include "utils/threads_utils.h"
 
 
@@ -23,7 +24,7 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 	QueryPerformanceCounter(&d->next_deadline);
 	last = d->next_deadline;
 
-	while (InterlockedCompareExchange(&d->running, 1, 1)) {
+	while(atomic_cas_i32(&d->running, 1, 1)) {
 
 		/* --- EtherCAT cycle --- */
 		ecx_send_processdata(&d->ctx);
@@ -79,13 +80,13 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 
 void ethercat_start_thread(EtherCAT_Driver_t* d)
 {
-	InterlockedExchange(&d->running, 1);
+	atomic_exchange_i32(&d->running, 1);
 	osal_thread_create_rt(&d->thread, 128000, ethercat_thread, d);
 }
 
 
 void ethercat_stop_thread(EtherCAT_Driver_t* d)
 {
-	InterlockedExchange(&d->running, 0);
+	atomic_exchange_i32(&d->running, 0);
 	WaitForSingleObject(d->thread, INFINITE);
 }
