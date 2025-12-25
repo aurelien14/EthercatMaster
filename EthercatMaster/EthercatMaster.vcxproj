@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\core\plateform\win32\atomic.h" />
-    <ClCompile Include="src\core\plateform\win32\thread.c" />
+    <ClCompile Include="src\core\plateform\win32\sleep.c" />
+    <ClCompile Include="src\core\time\time.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\app\plc_task1.c" />
     <ClCompile Include="src\backend\ethercat\ethercat.c" />
@@ -50,10 +50,13 @@
     <ClInclude Include="src\core\device\device_desc.h" />
     <ClInclude Include="src\core\plateform\plateform.h" />
     <ClInclude Include="src\core\plateform\plateform_detect.h" />
+    <ClInclude Include="src\core\plateform\win32\atomic.h" />
+    <ClInclude Include="src\core\plateform\win32\sleep.h" />
     <ClInclude Include="src\core\plc\tags.h" />
     <ClInclude Include="src\core\scheduler\task.h" />
     <ClInclude Include="src\core\scheduler\scheduler.h" />
     <ClInclude Include="src\core\scheduler\scheduler_thread.h" />
+    <ClInclude Include="src\core\time\time.h" />
     <ClInclude Include="src\devices\L230\L230_device.h" />
     <ClInclude Include="src\devices\L230\L230_device_desc.h" />
     <ClInclude Include="src\devices\L230\L230_ethercat_desc.h" />

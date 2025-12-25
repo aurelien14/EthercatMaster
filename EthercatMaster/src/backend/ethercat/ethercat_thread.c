@@ -3,7 +3,7 @@
 #include "core/plateform/plateform.h"
 #include "utils/threads_utils.h"
 
-
+#if defined PLATFORM_WINDOWS
 static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 {
 	// Pin + priorité
@@ -76,7 +76,12 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 
 	return 0;
 }
+#else
+static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
+{
 
+}
+#endif
 
 void ethercat_start_thread(EtherCAT_Driver_t* d)
 {

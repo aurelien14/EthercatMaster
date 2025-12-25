@@ -2,11 +2,7 @@
 
 #include "task.h"
 #include "config/config.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-
+#include <osal.h>
 
 typedef struct {
 	PLC_Task_t tasks[PLC_MAX_TASKS];

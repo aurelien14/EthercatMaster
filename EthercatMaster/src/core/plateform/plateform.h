@@ -3,4 +3,6 @@
 
 #if defined PLATFORM_WINDOWS
 #include "win32/atomic.h"
+#include "win32/sleep.h"
 #endif
+

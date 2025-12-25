@@ -138,7 +138,7 @@ int runtime_init(Runtime_t *runtime, PLCSystemConfig_t* plc_config) {
 	scheduler_add_task(&runtime->plc,
 		&(PLC_Task_t){
 			.name = "FAST",
-			.period_us = 1000,
+			.period_ms = 1000,
 			.run = plc_task1_run,
 			.context = runtime
 	});
