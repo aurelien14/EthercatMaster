@@ -1,7 +1,6 @@
 #include "ethercat.h"
 #include "config/config.h"
 #include "core/plateform/plateform.h"
-#include "utils/threads_utils.h"
 
 #if defined PLATFORM_WINDOWS
 static OSAL_THREAD_HANDLE ethercat_thread(void* arg)

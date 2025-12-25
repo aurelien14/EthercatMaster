@@ -33,7 +33,6 @@
     <ClCompile Include="src\core\runtime\runtime.c" />
     <ClCompile Include="src\devices\L230\L230_device_desc.c" />
     <ClCompile Include="src\devices\L230\L230_ethercat_desc.c" />
-    <ClCompile Include="src\utils\threads_utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app\plc_tasks.h" />
@@ -62,7 +61,6 @@
     <ClInclude Include="src\devices\L230\L230_ethercat_desc.h" />
     <ClInclude Include="src\devices\L230\L230_ethercat_pdo.h" />
     <ClInclude Include="src\core\runtime\runtime.h" />
-    <ClInclude Include="src\utils\threads_utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
