@@ -2,9 +2,11 @@
 #include "runtime.h"
 #include "backend/ethercat/ethercat.h"
 #include "backend/ethercat/ethercat_bind.h"
+#include "core/plc/tags.h"
 #include "app/plc_tasks.h"
 #include <stdlib.h>
 
+//TODO: mettre dans device.c ???
 static Device_t* runtime_create_device(DeviceDesc_t* device_desc, const char *name) {
 	Device_t* dev = calloc(1, sizeof(Device_t));
 	if (dev != NULL) {
@@ -34,6 +36,7 @@ static int runtime_get_backend_index(const char* backend_name) {
 }
 
 
+//TODO: mettre dans backend.c ???
 static BackendDriver_t* runtime_create_backend(Runtime_t* runtime, BackendConfig_t* drv_cfg) {
 	if (drv_cfg->type == PROTO_ETHERCAT) {
 		int i = runtime_get_backend_index(drv_cfg->name);
@@ -49,6 +52,8 @@ static BackendDriver_t* runtime_create_backend(Runtime_t* runtime, BackendConfig
 	}
 }
 
+
+//TODO: mettre dans backend.c ???
 static BackendDriver_t* runtime_find_backend(Runtime_t* runtime, const char* backend_name) {
 	for (size_t i = 0; i < runtime->backend_count; i++) {
 		if (strcmp(runtime->backends[i]->name, backend_name) == 0) {
@@ -57,6 +62,8 @@ static BackendDriver_t* runtime_find_backend(Runtime_t* runtime, const char* bac
 	}
 	return NULL;
 }
+
+
 
 
 Runtime_t *create_runtime(void) {
@@ -133,14 +140,31 @@ int runtime_init(Runtime_t *runtime, PLCSystemConfig_t* plc_config) {
 		}
 	}
 
-	//4. Init PLC tasks Scheduler
+
+	//4. Initialiser iomap
+	PLC_Tag_t* t = create_plc_tags(plc_config->plc_tags_count);
+	for (size_t i = 0; i < plc_config->plc_tags_count; i++) {
+		PLC_TagDesc_Config_t* tc = &plc_config->plc_tags_desc[i];
+		for (size_t j = 0; j < runtime->device_count; j++) {
+			Device_t* d = runtime->devices[j];
+			if (strcmp(d->name, tc->device_name)) {
+				//t[i].
+			}
+		}
+		//plc_tags_init(plc_config.);
+	}
+	
+
+
+	//5. Init PLC tasks Scheduler
 	scheduler_init(&runtime->plc, SCHEDULER_BASE_CYCLE_US);
 	scheduler_add_task(&runtime->plc,
 		&(PLC_Task_t){
-			.name = "FAST",
+		.name = "FAST",
 			.period_ms = 1000,
 			.run = plc_task1_run,
-			.context = runtime
+			.context = runtime,
+			.init = 0
 	});
 
 	return 0;
@@ -190,8 +214,9 @@ void runtime_stop(Runtime_t* runtime) {
 	if (runtime == NULL) {
 		return;
 	}
+
 	//stopper le scheduler
-	//scheduler_stop(&runtime->plc);
+	scheduler_stop(&runtime->plc);
 
 	//stopper les backends drivers
 	for (size_t i = 0; i < runtime->backend_count; i++) {

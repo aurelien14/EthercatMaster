@@ -3,11 +3,15 @@
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
-#include "app/plc_config.h"
+#include "config/system_config.h"
 #include "core/runtime/runtime.h"
+
+//TODO: make main independant plateform
 
 static Runtime_t* p_runtime = NULL;
 static LONG g_timer_users = 0;
+
+extern const PLCSystemConfig_t PLC_SYSTEM_CONFIG;
 
 static BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {
@@ -21,13 +25,13 @@ static BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 	return FALSE;
 }
 
-void rt_timer_acquire(void)
+static void rt_timer_acquire(void)
 {
 	if (InterlockedIncrement(&g_timer_users) == 1)
 		timeBeginPeriod(1);
 }
 
-void rt_timer_release(void)
+static void rt_timer_release(void)
 {
 	if (InterlockedDecrement(&g_timer_users) == 0)
 		timeEndPeriod(1);
@@ -45,7 +49,7 @@ int main(int argc, char* argv[])
 
 	InterlockedExchange(&p_runtime->system_is_running, 1);
 
-	if (runtime_init(p_runtime, &plc_system_config) < 0)
+	if (runtime_init(p_runtime, &PLC_SYSTEM_CONFIG) < 0)
 		return -1;
 
 	runtime_start(p_runtime);

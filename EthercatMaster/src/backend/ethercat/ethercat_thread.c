@@ -70,7 +70,7 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 		last = now;
 		d->next_deadline.QuadPart += cycle_ticks;
 
-		wait_until_qpc(d->next_deadline, d->qpc_freq);
+		wait_until_qpc_2(d->next_deadline, d->qpc_freq);
 	}
 
 	return 0;
@@ -92,5 +92,6 @@ void ethercat_start_thread(EtherCAT_Driver_t* d)
 void ethercat_stop_thread(EtherCAT_Driver_t* d)
 {
 	atomic_exchange_i32(&d->running, 0);
-	WaitForSingleObject(d->thread, INFINITE);
+	os_thread_join(d->thread, NULL);
 }
+

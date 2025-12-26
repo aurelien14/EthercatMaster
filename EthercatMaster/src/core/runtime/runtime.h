@@ -1,5 +1,5 @@
 #pragma once
-#include "app/plc_config.h"
+#include "config/system_config.h"
 #include "core/device/device.h"
 #include "core/backend/backend.h"
 #include "core/scheduler/scheduler.h"
@@ -32,7 +32,6 @@ typedef struct {
 	int device_count;
 
 	Scheduler_t plc;
-
 	long system_is_running;
 
 } Runtime_t;

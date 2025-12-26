@@ -9,7 +9,7 @@ typedef struct {
 	size_t task_count;
 
 	uint32_t base_cycle_us;
-	volatile LONG running;
+	volatile LONG running; //for scheduler thread, private
 
 	LARGE_INTEGER qpc_freq;
 	LARGE_INTEGER next_tick;

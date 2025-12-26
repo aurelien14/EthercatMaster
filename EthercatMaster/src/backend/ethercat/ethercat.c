@@ -203,6 +203,7 @@ EtherCAT_Driver_t* EtherCAT_Driver_Create(EtherCAT_config_t *config, int etherca
 
 	if (!ecx_init(&d->ctx, config->ifname)) {
 		free(d);
+		print_available_adapters();
 		return NULL;
 	}
 	return d;

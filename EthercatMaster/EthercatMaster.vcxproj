@@ -20,13 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\plateform\win32\sleep.c" />
+    <ClCompile Include="src\core\plateform\win32\thread.c" />
+    <ClCompile Include="src\core\plc\tags.c" />
     <ClCompile Include="src\core\time\time.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\app\plc_task1.c" />
     <ClCompile Include="src\backend\ethercat\ethercat.c" />
     <ClCompile Include="src\backend\ethercat\ethercat_bind.c" />
     <ClCompile Include="src\backend\ethercat\ethercat_thread.c" />
-    <ClCompile Include="src\app\plc_config.c" />
+    <ClCompile Include="src\app\system_config.c" />
     <ClCompile Include="src\core\scheduler\scheduler.c" />
     <ClCompile Include="src\core\scheduler\scheduler_thread.c" />
     <ClCompile Include="src\devices\L230\L230_device.c" />
@@ -44,14 +46,16 @@
     <ClInclude Include="src\core\backend\backend.h" />
     <ClInclude Include="src\backend\ethercat\ethercat.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_device_desc.h" />
-    <ClInclude Include="src\app\plc_config.h" />
+    <ClInclude Include="src\config\system_config.h" />
     <ClInclude Include="src\core\device\device.h" />
     <ClInclude Include="src\core\device\device_desc.h" />
     <ClInclude Include="src\core\plateform\plateform.h" />
     <ClInclude Include="src\core\plateform\plateform_detect.h" />
     <ClInclude Include="src\core\plateform\win32\atomic.h" />
     <ClInclude Include="src\core\plateform\win32\sleep.h" />
+    <ClInclude Include="src\core\plateform\win32\thread.h" />
     <ClInclude Include="src\core\plc\tags.h" />
+    <ClInclude Include="src\core\plc\tags_desc.h" />
     <ClInclude Include="src\core\scheduler\task.h" />
     <ClInclude Include="src\core\scheduler\scheduler.h" />
     <ClInclude Include="src\core\scheduler\scheduler_thread.h" />

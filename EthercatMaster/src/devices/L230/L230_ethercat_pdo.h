@@ -1,18 +1,30 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 static_assert(sizeof(float) == 4, "float must be 32-bit");
 
 #define L230_TIME_OUT_PROCESS_DATA_DEF	1000	//100ms
 #define L230_TIME_OUT_PROCESS_DATA		5000	//500ms, 0: watchdog désactivé
 
-#define X15_out (1<< 0)
-#define X12_out (1<< 1)
-#define X13_out (1<< 2)
-#define X3_out  (1<< 3)
-#define X4_out  (1<< 4)
-#define X14_out (1<< 5)
-#define X1_out  (1<< 6)
+
+#define X15_BIT 0
+#define X12_BIT 1
+#define X13_BIT 2
+#define X3_BIT	3
+#define X4_BIT	4
+#define X14_BIT 5
+#define X1_BIT	6
+
+
+#define X15_out (1<< X15_BIT)
+#define X12_out (1<< X12_BIT)
+#define X13_out (1<< X13_BIT)
+#define X3_out  (1<< X3_BIT)
+#define X4_out  (1<< X4_BIT)
+#define X14_out (1<< X14_BIT)
+#define X1_out  (1<< X1_BIT)
+
 #define X11_out (1<< 0)
 #define X10_out (1<< 1)
 #define X5_out  (1<< 2)
@@ -141,3 +153,6 @@ typedef struct
 
 
 #define L230_PDO_SIZE sizeof(L230_RX_PDO_t) + sizeof(L230_TX_PDO_t)
+
+#define L230_IN(field) offsetof(L230_TX_PDO_t, field)
+#define L230_OUT(field) offsetof(L230_RX_PDO_t, field)

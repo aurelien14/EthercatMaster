@@ -31,7 +31,7 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 				osal_get_monotonic_time(&t0);
 				t->run(t->context);
 				osal_get_monotonic_time(&t1);
-
+				t->init = 1;
 				osal_time_diff(&t0, &t1, &dt);
 
 				t->exec_time_ns =
@@ -59,5 +59,5 @@ void scheduler_start_thread(Scheduler_t* s)
 void scheduler_stop_thread(Scheduler_t* s)
 {
 	atomic_exchange_i32(&s->running, 0);
-	WaitForSingleObject(s->thread, INFINITE);
+	os_thread_join(s->thread, NULL);
 }
