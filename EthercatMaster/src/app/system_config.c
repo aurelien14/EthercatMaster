@@ -5,7 +5,7 @@
 //#include "devices/DAIO16/daio16_device_desc.h"
 //#include "devices/DriveX/drive_modbus_desc.h"
 //#include "core/backend/backend.h"
-#include "core/plc/tags_desc.h"
+#include "core/tags/tags_desc.h"
 
 /*--------------------------------------------------*/
 /*			D R I V E R S    C O N F				*/

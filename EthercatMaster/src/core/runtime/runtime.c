@@ -1,9 +1,9 @@
-#include "config/config.h"
-#include "runtime.h"
-#include "backend/ethercat/ethercat.h"
-#include "core/plc/tags.h"
 #include "app/plc_tasks.h"
+#include "backend/ethercat/ethercat.h"
+#include "config/config.h"
 #include "core/system/memalloc.h"
+#include "core/tags/tags.h"
+#include "runtime.h"
 
 
 
@@ -48,7 +48,6 @@ static BackendDriver_t* runtime_find_backend(Runtime_t* runtime, const char* bac
 }
 
 
-
 static int runtime_create_plc_tag(Runtime_t* runtime, const PLCSystemConfig_t* plc_config) {
 	PLC_Tag_t* tags = CALLOC(1, plc_config->plc_tags_count * sizeof(PLC_Tag_t));
 	if (tags == NULL) {
@@ -89,7 +88,7 @@ static int runtime_create_plc_tag(Runtime_t* runtime, const PLCSystemConfig_t* p
 				printf("[TAGS] Device at address %d not found for tag '%s'\n", \
 					tc->device_addr, tc->name);
 				free(tags);
-				return NULL;
+				return 0;
 			}
 
 			tag->io.device = dev;
@@ -185,17 +184,20 @@ int runtime_init(Runtime_t *runtime, const PLCSystemConfig_t* plc_config) {
 
 
 	//4. Initialiser iomap
-	PLC_Tag_t* t = runtime_create_plc_tag(runtime, plc_config);
+	if (runtime_create_plc_tag(runtime, plc_config)) {
+		//TODO: dois je vider les device et backend drivers?
+		return -1;
+	}
 
 
 	//5. Init PLC tasks Scheduler
-	scheduler_init(&runtime->plc, SCHEDULER_BASE_CYCLE_US);
+	scheduler_init(&runtime->plc, runtime, SCHEDULER_BASE_CYCLE_US);
 	scheduler_add_task(&runtime->plc,
 		&(PLC_Task_t){
 		.name = "FAST",
 			.period_ms = 100,
 			.run = plc_task1_run,
-			.context = runtime,
+			//.context = runtime,
 			.init = 0
 	});
 
@@ -292,4 +294,14 @@ void runtime_cleanup(Runtime_t* runtime) {
 
 	//Libérer
 	FREE(runtime);
+}
+
+
+void runtime_sync_backends(Runtime_t* rt)
+{
+	for (size_t i = 0; i < rt->backend_count; i++) {
+		BackendDriver_t* drv = rt->backends[i];
+		if (drv->ops->sync)
+			drv->ops->sync(drv);
+	}
 }

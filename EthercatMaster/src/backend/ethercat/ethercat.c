@@ -78,6 +78,18 @@ int ethercat_transition_op(EtherCAT_Driver_t* ec)
 }
 
 
+static int soem_config_callback(ecx_contextt* ctx, uint16_t slave) {
+	// 1. Trouver le device correspondant à cet index d'esclave
+	/*EtherCAT_Device_t* dev = find_device_by_slave_index(slave);
+
+	// 2. Appeler le hook du descripteur
+	if (dev->desc->config_hook) {
+		return dev->desc->config_hook(dev->master, slave);
+	}*/
+	return 1;
+}
+
+
 static void print_available_adapters(void) {
 	ec_adaptert* adapter = NULL;
 	ec_adaptert* head = NULL;
@@ -106,9 +118,11 @@ static void ethercat_stats_init(EtherCAT_Driver_t* d)
 	d->stats.total_cycles = 0;
 }
 
+
 static void ethercat_create_device_buffers() {
 
 }
+
 
 static int ethercat_init(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
@@ -167,22 +181,15 @@ static int ethercat_finalize_mapping(BackendDriver_t* drv) {
 		ec_dev->soem_inputs = sl->inputs;
 		ec_dev->soem_outputs = sl->outputs;
 
-		// On récupère les tailles (SOEM les remplit après config_map)
-		ec_dev->rx_size = sl->Ibytes;
-		ec_dev->tx_size = sl->Obytes;
-
-		// ALLOCATION DU DOUBLE BUFFERING
-		if (ec_dev->rx_size > 0) {
-			ec_dev->rx_buffers[0] = CALLOC(1, ec_dev->rx_size);
-			ec_dev->rx_buffers[1] = CALLOC(1, ec_dev->rx_size);
-			atomic_store_i32(&ec_dev->active_rx_idx, 0);
-		}
-		if (ec_dev->tx_size > 0) {
-			ec_dev->tx_buffers[0] = CALLOC(1, ec_dev->tx_size);
-			ec_dev->tx_buffers[1] = CALLOC(1, ec_dev->tx_size);
-			atomic_store_i32(&ec_dev->active_tx_idx, 0);
+		if ((sl->Ibytes != ec_dev->base.tx_size ||
+			sl->Obytes != ec_dev->base.rx_size)) {
+			printf("[CONFIG] error  input and or output map size for slave %s pos %d\n", ec_dev->base.base.name, pos);
+			return -1;
 		}
 	}
+
+	atomic_store_i32(&drv->active_rx_idx, 0);
+	atomic_store_i32(&drv->active_tx_idx, 0);
 
 	if(ec->has_dc_clock) ecx_configdc(&ec->ctx);
 
@@ -254,8 +261,34 @@ static int ethercat_bind_device(BackendDriver_t* d, Device_t* dev, const DeviceC
 
 	ec_dev->slave_index = pos;
 	ed->slaves[ed->slave_count++] = ec_dev;
+	//ec_dev->master = ed;
+	dev->driver = ed;
 
 	return 0;
+}
+
+
+static void ethercat_sync_buffers(BackendDriver_t* b) {
+	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+
+	// 1. On calcule le prochain index pour le PLC
+	int current_tx = atomic_load_i32(&b->active_tx_idx);
+	int next_tx = (current_tx == 0) ? 1 : 0;
+
+	// 2. RECOPIE DE RÉMANENCE (Anti-clignotement)
+	// On copie le buffer que le PLC vient de remplir dans le suivant
+	// pour que les sorties ne reviennent pas à zéro au prochain tour.
+	for (int i = 0; i < d->slave_count; i++) {
+		EtherCAT_Device_t* dev = d->slaves[i];
+		if (dev->tx_size > 0) { // Rappel: tx_size ici = taille des RX_PDO (Sorties)
+			memcpy(dev->base.tx_buffers[next_tx],
+				dev->base.tx_buffers[current_tx],
+				dev->tx_size);
+		}
+	}
+
+	// 3. On bascule l'index : le PLC travaillera sur le nouveau buffer au prochain cycle
+	atomic_store_i32(&b->active_tx_idx, next_tx);
 }
 
 
@@ -266,6 +299,7 @@ static const BackendDriverOps_t ops = {
 	.start = ethercat_start,
 	.stop = ethercat_stop,
 	.process = ethercat_process,
+	.sync = ethercat_sync_buffers,
 };
 
 
@@ -284,6 +318,7 @@ BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int insta
 	d->iomap_size = config->ethercat.io_map_size;
 	d->has_dc_clock = config->ethercat.has_dc_clock;
 
+
 	// Initialisation SOEM EtherCAT
 	if (!ecx_init(&d->ctx, config->ethercat.ifname)) {
 		print_available_adapters();
@@ -297,17 +332,15 @@ BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int insta
 
 void EtherCAT_Driver_Destroy(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+	
+
 	for (int i = 0; i < d->slave_count; i++) {
 		EtherCAT_Device_t* dev = d->slaves[i];
-		FREE(dev->rx_buffers[0]);
-		FREE(dev->rx_buffers[1]);
-		FREE(dev->tx_buffers[0]);
-		FREE(dev->tx_buffers[1]);
+		buffered_device_cleanup(&dev->base);
 	}
 	FREE(d->iomap);
 	FREE(d);
 }
-
 
 
 

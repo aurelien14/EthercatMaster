@@ -2,10 +2,10 @@
 #include "config/protocol.h"
 #include "core/backend/backend_desc.h"
 #include "core/device/device_desc.h"
+#include "core/tags/tags_desc.h"
 #include "core/scheduler/task.h"
-#include "core/plc/tags_desc.h"
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 /*--------------------------------------------------*/
 /*			D R I V E R S    C O N F				*/
 /*--------------------------------------------------*/

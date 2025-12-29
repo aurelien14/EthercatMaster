@@ -139,6 +139,7 @@ typedef struct
 		uint32_t SerialNumber;
 		uint32_t HW_Version;
 		uint32_t FW_Version;
+		uint16_t AliasAddress;
 	} slaveinfo;
 
 	struct {

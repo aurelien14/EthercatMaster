@@ -3,7 +3,7 @@
 #include "core/device/device.h"
 #include "core/backend/backend.h"
 #include "core/scheduler/scheduler.h"
-#include "core/plc/tags.h"
+#include "core/tags/tags.h"
 
 
 #if 0
@@ -23,7 +23,7 @@ typedef struct {
 } Runtime_t;
 #endif
 
-typedef struct {
+typedef struct Runtime {
 	BackendDriver_t* backends[MAX_BACKENDS];
 	int backend_count;
 
@@ -48,3 +48,4 @@ void runtime_start(Runtime_t* runtime);
 void runtime_process(Runtime_t*);
 void runtime_stop(Runtime_t*);
 void runtime_cleanup(Runtime_t*);
+void runtime_sync_backends(Runtime_t* rt);

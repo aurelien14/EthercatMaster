@@ -10,8 +10,6 @@ const DeviceDesc_t L230_DEVICE_DESC = {
 	.hw_desc = &L230_ECAT_DESC,
 	.create = L230_Create,
 	.destroy = L230_Destroy,
-	.get_input_ptr = L230_get_input_ptr,
-	.get_output_ptr = L230_get_input_ptr,
 };
 
 

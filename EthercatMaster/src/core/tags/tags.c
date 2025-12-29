@@ -1,5 +1,5 @@
 #include "config/system_config.h"
-#include "core/device/device.h"
+#include "core/device/buffered_device.h"
 #include "tags.h"
 #include "core/system/memalloc.h"
 #include "config/config.h"
@@ -17,7 +17,7 @@ static const PLC_TypeInfo_t plc_type_info_array[] = {
 };
 
 
-static inline int plc_type_size(PLC_DataType_t type)
+static inline size_t plc_type_size(PLC_DataType_t type)
 {
 	return plc_type_info_array[type].size;
 }
@@ -73,7 +73,7 @@ int plc_tag_write(const PLC_Tag_t* tag, int in_value)
 
 	switch (tag->vtype) {
 	case PLC_OUT: {
-		uint8_t* base = device_get_output_ptr(tag->io.device);
+		uint8_t* base = device_get_input_ptr(tag->io.device);
 		if (base == NULL)
 			break;
 		uint8_t* addr = base + tag->io.offset;

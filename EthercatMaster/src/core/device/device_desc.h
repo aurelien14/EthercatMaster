@@ -11,9 +11,4 @@ typedef struct DeviceDesc {
 	const void* hw_desc; 
 	Device_t* (*create)(DeviceConfig_t* cfg);
 	void (*destroy)(Device_t* dev);
-
-	/* accès IO */
-	void* (*get_input_ptr)(Device_t* dev);
-	void* (*get_output_ptr)(Device_t* dev);
-
 } DeviceDesc_t;

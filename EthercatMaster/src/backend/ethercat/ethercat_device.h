@@ -1,15 +1,12 @@
 #pragma once
 #include "core/device/buffered_device.h"
-#include <stdint.h>
-#include "config/config.h"
+//#include "ethercat.h"
 
-typedef struct DeviceConfig DeviceConfig_t;
 typedef struct EtherCAT_Driver EtherCAT_Driver_t;
-
 
 typedef struct {
     BufferedDevice_t base;
-    //EtherCAT_Driver_t* master; // BACK-LINK vers le driver
+    EtherCAT_Driver_t* master; // BACK-LINK vers le driver
 
     uint16_t slave_index;
 
@@ -19,5 +16,6 @@ typedef struct {
     size_t rx_size;
     size_t tx_size;
 
-} EtherCAT_Device_t_old;
+} EtherCAT_Device_t;
 
+int ethercat_device_init(EtherCAT_Device_t* ecat_dev, DeviceConfig_t* cfg);

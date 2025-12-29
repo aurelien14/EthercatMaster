@@ -3,7 +3,6 @@
 #include "core/runtime/runtime.h"
 #include "backend/ethercat/ethercat.h"
 #include "devices/L230/L230_ethercat_pdo.h"
-#include "core/plc/tags.h"
 
 int plc_task1_run(void* ctx) {
 	Runtime_t* r = (Runtime_t*)ctx;
