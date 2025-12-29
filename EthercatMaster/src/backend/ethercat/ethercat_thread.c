@@ -12,6 +12,7 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)arg;
 
+
 	LARGE_INTEGER now, last;
 	int64_t cycle_ticks;
 
@@ -30,22 +31,33 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 		ecx_receive_processdata(&d->ctx, EC_TIMEOUTRET);
 
 		/* --- Synchronisation avec le monde PLC --- */
+		// 1. LES ENTRÉES (Esclave -> Master) : On remplit le "back_idx" pour le PLC
+		int back_input = atomic_load_i32(&d->base.active_in_buffer_idx) == 0 ? 1 : 0;
+
+		// 2. LES SORTIES (Master -> Esclave) : On prend ce que le PLC a validé
+		int active_tx = atomic_load_i32(&d->base.active_out_buffer_idx);
+
 		for (int i = 0; i < d->slave_count; i++) {
 			EtherCAT_Device_t* dev = d->slaves[i];
+			BufferedDevice_t* bdev = &dev->base;
 
-			// --- ENTRÉES : SOEM -> APP (Double Buffer Swap) ---
-			if (dev->rx_size > 0) {
-				int back_idx = atomic_load_i32(&dev->active_rx_idx) == 0 ? 1 : 0;
-				memcpy(dev->rx_buffers[back_idx], dev->soem_inputs, dev->rx_size);
-				atomic_store_i32(&dev->active_rx_idx, back_idx); // On publie la nouvelle donnée
+			// --- ENTRÉES : SOEM -> rx_buffers ---
+			// Les TX_PDO de l'esclave arrivent dans soem_inputs
+			if (dev->in_size > 0) {
+				memcpy(bdev->in_buffers[back_input], dev->soem_inputs, dev->in_size);
 			}
 
-			// --- SORTIES : APP -> SOEM ---
-			if (dev->tx_size > 0) {
-				int active_tx = atomic_load_i32(&dev->active_tx_idx);
-				memcpy(dev->soem_outputs, dev->tx_buffers[active_tx], dev->tx_size);
+			// --- SORTIES : tx_buffers -> SOEM ---
+			// On envoie le buffer que le PLC est en train de NE PAS utiliser
+			// (L'index active_tx est celui où le PLC écrit, on prend donc l'autre pour l'envoi)
+			int out_idx = (active_tx == 0) ? 1 : 0;
+			if (dev->out_size > 0) {
+				memcpy(dev->soem_outputs, bdev->out_buffers[out_idx], dev->out_size);
 			}
 		}
+		// On publie les nouvelles entrées pour le PLC
+		atomic_store_i32(&d->base.active_out_buffer_idx, back_input);
+
 
 		/* --- Mesures --- */
 		QueryPerformanceCounter(&now);
@@ -93,6 +105,8 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 
 	return 0;
 }
+
+
 #else
 static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 {

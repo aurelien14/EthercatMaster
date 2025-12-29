@@ -4,9 +4,13 @@
 #include "config/config.h"
 #include <osal.h>
 
+typedef struct Runtime Runtime_t;
+
 typedef struct {
 	PLC_Task_t tasks[PLC_MAX_TASKS];
 	size_t task_count;
+
+	Runtime_t* runtime;
 
 	uint32_t base_cycle_us;
 	volatile LONG running; //for scheduler thread, private
@@ -17,7 +21,7 @@ typedef struct {
 } Scheduler_t;
 
 
-void scheduler_init(Scheduler_t* s, uint32_t base_cycle_us);
+void scheduler_init(Scheduler_t* s, Runtime_t* runtime, uint32_t base_cycle_us);
 void scheduler_add_task(Scheduler_t* s, PLC_Task_t* task);
 void scheduler_start(Scheduler_t* s);
 void scheduler_stop(Scheduler_t* s);

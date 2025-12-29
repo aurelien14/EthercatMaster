@@ -1,14 +1,18 @@
 #include "config/config.h"
-#include "scheduler_thread.h"
 #include "core/plateform/plateform.h"
+#include "core/runtime/runtime.h"
 #include "core/time/time.h"
+#include "scheduler_thread.h"
 #include <osal.h>
 
 //a enlever
 #include <stdio.h>
+
+//TODO: configurer tick_period_ns deans config
 static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 {
 	Scheduler_t* s = arg;
+	Runtime_t* r = s->runtime;
 	ec_timet next;
 	const uint64_t tick_period_ns = 1000000; // Tick de 1ms
 
@@ -36,18 +40,25 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 			if (t->next_deadline.tv_sec == 0) t->next_deadline = now;
 
 			if (osal_timespeccmp(&now, &t->next_deadline, >= )) {
-				t->run(t->context);
+				t->run(r);
 				add_time_ns(&t->next_deadline, t->period_ns);
 			}
 		}
+
+		//synchronize buffers
+		runtime_sync_backends(r);
 	}
 
 	timeEndPeriod(1);
 	return 0;
 }
+
+
+#if 0
 static OSAL_THREAD_HANDLE scheduler_thread_old(void* arg)
 {
 	Scheduler_t* s = arg;
+	Runtime_t* r = s->runtime;
 
 	ec_timet next;
 	ec_timet now;
@@ -70,7 +81,7 @@ static OSAL_THREAD_HANDLE scheduler_thread_old(void* arg)
 				ec_timet t0, t1, dt;
 
 				osal_get_monotonic_time(&t0);
-				t->run(t->context);
+				t->run(r);
 				osal_get_monotonic_time(&t1);
 				//t->init = 1;
 				osal_time_diff(&t0, &t1, &dt);
@@ -88,7 +99,7 @@ static OSAL_THREAD_HANDLE scheduler_thread_old(void* arg)
 
 	return 0;
 }
-
+#endif
 
 void scheduler_start_thread(Scheduler_t* s)
 {

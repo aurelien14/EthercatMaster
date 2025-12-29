@@ -1,6 +1,5 @@
 #pragma once
-
-#include "devices/ethercat_device.h"
+#include "backend/ethercat/ethercat_device.h"
 #include <stdint.h>
 
 typedef struct {
@@ -16,5 +15,3 @@ typedef struct {
 
 Device_t* L230_Create(DeviceConfig_t* cfg);
 void L230_Destroy(Device_t* dev);
-void* L230_get_input_ptr(Device_t* dev);
-void* L230_get_output_ptr(Device_t* dev);

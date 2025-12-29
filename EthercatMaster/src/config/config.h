@@ -7,8 +7,8 @@
 #define ECAT_MAX_SLAVES 32
 #define EC_SLAVE_COUNT_MAX   100	//EC_MAXSLAVE dans #include "soem/ec_options.h"
 
-#define ECAT_DOUBLE_BUFFURING 1
-#define ETHERCAT_JITTER_CALC 1
+#define ECAT_DEV_BUFFER_COUNT    2
+#define ETHERCAT_JITTER_CALC	1
 
 
 #define PLC_MAX_TASKS	32

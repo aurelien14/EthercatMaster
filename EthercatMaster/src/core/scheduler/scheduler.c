@@ -1,13 +1,14 @@
 #include "scheduler.h"
 #include "scheduler_thread.h"
 
-void scheduler_init(Scheduler_t* s, uint32_t base_cycle_us) {
+void scheduler_init(Scheduler_t* s, Runtime_t* runtime, uint32_t base_cycle_us) {
 	s->task_count = 0;
 	s->base_cycle_us = base_cycle_us;
 	InterlockedExchange(&s->running, 0);
 	s->thread = NULL;
 	QueryPerformanceFrequency(&s->qpc_freq);
 	s->next_tick.QuadPart = 0;
+	s->runtime = runtime;
 }
 
 void scheduler_add_task(Scheduler_t* s, PLC_Task_t* t) {

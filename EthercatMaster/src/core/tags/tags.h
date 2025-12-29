@@ -1,6 +1,7 @@
 #pragma once
 #include "tags_desc.h"
-#include "core/device/device.h"
+
+typedef struct Device Device_t;
 
 typedef struct {
 	size_t size;
@@ -31,6 +32,8 @@ typedef struct {
 } PLC_Tag_t;
 
 
+
+
 PLC_Tag_t* create_plc_tags(size_t count);
 int plc_tag_read(const PLC_Tag_t* tag, void* out_value);
-int plc_tag_write(const PLC_Tag_t* tag, int in_value);
+int plc_tag_write(const PLC_Tag_t* tag, const void* in_value);

@@ -20,15 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\backend\ethercat\ethercat_desc.c" />
+    <ClCompile Include="src\backend\ethercat\ethercat_device.c" />
     <ClCompile Include="src\core\backend\backend.c" />
+    <ClCompile Include="src\core\device\buffered_device.c" />
     <ClCompile Include="src\core\device\device.c" />
     <ClCompile Include="src\core\plateform\win32\sleep.c" />
     <ClCompile Include="src\core\plateform\win32\thread.c" />
-    <ClCompile Include="src\core\plc\tags.c" />
     <ClCompile Include="src\core\runtime\device_lookup.c" />
     <ClCompile Include="src\core\system\memalloc.c" />
+    <ClCompile Include="src\core\tags\tags.c" />
     <ClCompile Include="src\core\time\time.c" />
-    <ClCompile Include="src\devices\ethercat_device.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\app\plc_task1.c" />
     <ClCompile Include="src\backend\ethercat\ethercat.c" />
@@ -45,7 +46,10 @@
     <ClInclude Include="src\app\plc_tasks.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_config.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_desc.h" />
-    <ClInclude Include="src\devices\ethercat_device.h" />
+    <ClInclude Include="src\backend\ethercat\ethercat_device.h" />
+    <ClInclude Include="src\core\device\buffered_device.h" />
+    <ClInclude Include="src\core\tags\tags.h" />
+    <ClInclude Include="src\core\tags\tags_desc.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_thread.h" />
     <ClInclude Include="src\config\config.h" />
     <ClInclude Include="src\core\backend\backend.h" />
@@ -61,8 +65,6 @@
     <ClInclude Include="src\core\plateform\win32\atomic.h" />
     <ClInclude Include="src\core\plateform\win32\sleep.h" />
     <ClInclude Include="src\core\plateform\win32\thread.h" />
-    <ClInclude Include="src\core\plc\tags.h" />
-    <ClInclude Include="src\core\plc\tags_desc.h" />
     <ClInclude Include="src\core\runtime\device_lookup.h" />
     <ClInclude Include="src\core\scheduler\task.h" />
     <ClInclude Include="src\core\scheduler\scheduler.h" />

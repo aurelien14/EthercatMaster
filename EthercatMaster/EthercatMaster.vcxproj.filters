@@ -57,9 +57,6 @@
     <ClCompile Include="src\core\plateform\win32\thread.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\plc\tags.c">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="src\core\system\memalloc.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -75,7 +72,13 @@
     <ClCompile Include="src\backend\ethercat\ethercat_desc.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\devices\ethercat_device.c">
+    <ClCompile Include="src\core\device\buffered_device.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\tags\tags.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\backend\ethercat\ethercat_device.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -96,9 +99,6 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="src\core\runtime\runtime.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="src\devices\ethercat_device.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="src\devices\L230\L230_ethercat_desc.h">
@@ -140,9 +140,6 @@
     <ClInclude Include="src\core\plateform\win32\sleep.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\plc\tags.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\scheduler\task.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -158,9 +155,6 @@
     <ClInclude Include="src\core\plateform\win32\thread.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\plc\tags_desc.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="src\core\system\memalloc.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
@@ -174,6 +168,18 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="src\config\protocol.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\device\buffered_device.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\tags\tags.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\tags\tags_desc.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="src\backend\ethercat\ethercat_device.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>

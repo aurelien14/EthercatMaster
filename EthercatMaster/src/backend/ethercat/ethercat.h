@@ -1,10 +1,11 @@
 #pragma once
-#include "config/system_config.h"
+#include "config/config.h"
+//#include "config/system_config.h"
 #include "core/backend/backend.h"
-#include "devices/ethercat_device.h"
+#include "ethercat_device.h"
 #include <soem/soem.h>
 
-#define ECAT_MAX_SLAVES 32	//TODO: mettre dans un fichier commun config.h
+
 
 typedef struct Ethercat_Stats {
 	uint32_t cycle_time_us;
@@ -17,7 +18,7 @@ typedef struct Ethercat_Stats {
 } Ethercat_Stats_t;
 
 
-typedef struct {
+typedef struct EtherCAT_Driver {
 	BackendDriver_t base;
 
 	ecx_contextt ctx;
@@ -37,6 +38,7 @@ typedef struct {
 
 	Ethercat_Stats_t stats;
 } EtherCAT_Driver_t;
+
 
 
 BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int instance_index);

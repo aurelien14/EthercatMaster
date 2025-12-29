@@ -12,7 +12,7 @@ typedef struct {
 	uint32_t offset_ms;
 
 	PLC_TaskFunc run;
-	void* context;
+	//void* context;
 
 	/* runtime */
 	bool init;
@@ -24,9 +24,3 @@ typedef struct {
 	uint64_t exec_time_ns;
 	uint64_t overrun_count;
 } PLC_Task_t;
-
-
-typedef struct {
-	PLC_Task_t* pTask;
-
-} PLC_TaskContext_t;

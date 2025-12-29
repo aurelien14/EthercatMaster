@@ -1,4 +1,6 @@
 #pragma once
+#include <osal.h>
+
 typedef enum {
 	PLC_BOOL,
 	PLC_INT,
