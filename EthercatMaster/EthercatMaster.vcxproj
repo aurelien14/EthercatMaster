@@ -28,6 +28,7 @@
     <ClCompile Include="src\core\runtime\device_lookup.c" />
     <ClCompile Include="src\core\system\memalloc.c" />
     <ClCompile Include="src\core\time\time.c" />
+    <ClCompile Include="src\devices\ethercat_device.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\app\plc_task1.c" />
     <ClCompile Include="src\backend\ethercat\ethercat.c" />

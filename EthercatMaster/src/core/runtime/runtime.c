@@ -193,7 +193,7 @@ int runtime_init(Runtime_t *runtime, const PLCSystemConfig_t* plc_config) {
 	scheduler_add_task(&runtime->plc,
 		&(PLC_Task_t){
 		.name = "FAST",
-			.period_ms = 1000,
+			.period_ms = 100,
 			.run = plc_task1_run,
 			.context = runtime,
 			.init = 0
@@ -263,6 +263,17 @@ void runtime_cleanup(Runtime_t* runtime) {
 	if (runtime == NULL) {
 		return;
 	}
+
+	// Libérer les backends en premier car il alloue les buffers dans les devices
+	for (size_t i = 0; i < runtime->backend_count; i++) {
+		BackendDriver_t* drv = runtime->backends[i];
+		if (drv->desc->destroy)
+			drv->desc->destroy(drv);
+		runtime->backends[i] = NULL;
+	}
+	runtime->backend_count = 0;
+
+
 	// Libérer les devices
 	for (size_t i = 0; i < runtime->device_count; i++) {
 		Device_t* dev = runtime->devices[i];
@@ -272,14 +283,7 @@ void runtime_cleanup(Runtime_t* runtime) {
 	}
 	runtime->device_count = 0;
 
-	// Libérer les backends
-	for (size_t i = 0; i < runtime->backend_count; i++) {
-		BackendDriver_t* drv = runtime->backends[i];
-		if(drv->desc->destroy)
-			drv->desc->destroy(drv);
-		runtime->backends[i] = NULL;
-	}
-	runtime->backend_count = 0;
+	
 
 	// Libérer les tags
 	FREE(runtime->tags);

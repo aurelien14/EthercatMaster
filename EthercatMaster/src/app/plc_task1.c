@@ -12,15 +12,14 @@ int plc_task1_run(void* ctx) {
 	// Exemple de tâche PLC qui effectue une opération simple
 	PLC_Task_t* task = (PLC_Task_t*)ctx;
 	PLC_Tag_t* x15 = &r->tags[2];
-	
-	if (counter > 10000) {
+	if (counter > 10) {
 		value = !value;
-		plc_tag_write(x15, 1);
+		plc_tag_write(x15, value);
 		counter = 0;
 		printf("Value=%d\n", value);
 		fflush(stdout);
 	}
-
-	counter++;
+		counter++;
+	
 	return 0; // Retourner 0 pour indiquer le succès
 }

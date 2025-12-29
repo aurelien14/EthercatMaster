@@ -29,6 +29,24 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 		ecx_send_processdata(&d->ctx);
 		ecx_receive_processdata(&d->ctx, EC_TIMEOUTRET);
 
+		/* --- Synchronisation avec le monde PLC --- */
+		for (int i = 0; i < d->slave_count; i++) {
+			EtherCAT_Device_t* dev = d->slaves[i];
+
+			// --- ENTRÉES : SOEM -> APP (Double Buffer Swap) ---
+			if (dev->rx_size > 0) {
+				int back_idx = atomic_load_i32(&dev->active_rx_idx) == 0 ? 1 : 0;
+				memcpy(dev->rx_buffers[back_idx], dev->soem_inputs, dev->rx_size);
+				atomic_store_i32(&dev->active_rx_idx, back_idx); // On publie la nouvelle donnée
+			}
+
+			// --- SORTIES : APP -> SOEM ---
+			if (dev->tx_size > 0) {
+				int active_tx = atomic_load_i32(&dev->active_tx_idx);
+				memcpy(dev->soem_outputs, dev->tx_buffers[active_tx], dev->tx_size);
+			}
+		}
+
 		/* --- Mesures --- */
 		QueryPerformanceCounter(&now);
 

@@ -75,6 +75,9 @@
     <ClCompile Include="src\backend\ethercat\ethercat_desc.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\devices\ethercat_device.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\devices\L230\L230_device.h">

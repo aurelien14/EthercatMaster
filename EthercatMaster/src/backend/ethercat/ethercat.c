@@ -106,6 +106,9 @@ static void ethercat_stats_init(EtherCAT_Driver_t* d)
 	d->stats.total_cycles = 0;
 }
 
+static void ethercat_create_device_buffers() {
+
+}
 
 static int ethercat_init(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
@@ -140,8 +143,9 @@ static int ethercat_init(BackendDriver_t* b) {
 }
 
 
-static int ethercat_finalize_mapping(EtherCAT_Driver_t* ec) {
+static int ethercat_finalize_mapping(BackendDriver_t* drv) {
 	sleep(1000);
+	EtherCAT_Driver_t* ec = (EtherCAT_Driver_t*)drv;
 	int size = ecx_config_map_group(&ec->ctx, ec->iomap, 0);
 
 	if (size == 0) {
@@ -159,12 +163,28 @@ static int ethercat_finalize_mapping(EtherCAT_Driver_t* ec) {
 
 		ec_slavet* sl = &ec->ctx.slavelist[pos];
 
-		ec_dev->rx_pdo = sl->inputs;
-		ec_dev->tx_pdo = sl->outputs;
+		// On mémorise où sont les données dans l'IOmap de SOEM
+		ec_dev->soem_inputs = sl->inputs;
+		ec_dev->soem_outputs = sl->outputs;
+
+		// On récupère les tailles (SOEM les remplit après config_map)
+		ec_dev->rx_size = sl->Ibytes;
+		ec_dev->tx_size = sl->Obytes;
+
+		// ALLOCATION DU DOUBLE BUFFERING
+		if (ec_dev->rx_size > 0) {
+			ec_dev->rx_buffers[0] = CALLOC(1, ec_dev->rx_size);
+			ec_dev->rx_buffers[1] = CALLOC(1, ec_dev->rx_size);
+			atomic_store_i32(&ec_dev->active_rx_idx, 0);
+		}
+		if (ec_dev->tx_size > 0) {
+			ec_dev->tx_buffers[0] = CALLOC(1, ec_dev->tx_size);
+			ec_dev->tx_buffers[1] = CALLOC(1, ec_dev->tx_size);
+			atomic_store_i32(&ec_dev->active_tx_idx, 0);
+		}
 	}
 
-	if(ec->has_dc_clock)
-		ecx_configdc(&ec->ctx);
+	if(ec->has_dc_clock) ecx_configdc(&ec->ctx);
 
 	ethercat_transition_safeop(ec);
 	return 0;
@@ -277,6 +297,13 @@ BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int insta
 
 void EtherCAT_Driver_Destroy(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+	for (int i = 0; i < d->slave_count; i++) {
+		EtherCAT_Device_t* dev = d->slaves[i];
+		FREE(dev->rx_buffers[0]);
+		FREE(dev->rx_buffers[1]);
+		FREE(dev->tx_buffers[0]);
+		FREE(dev->tx_buffers[1]);
+	}
 	FREE(d->iomap);
 	FREE(d);
 }
