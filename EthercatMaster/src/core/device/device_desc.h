@@ -1,16 +1,19 @@
 #pragma once
-typedef enum {
-	PROTO_ETHERCAT = 0,
-	/*PROTO_MODBUS,
-	PROTO_TCP,
-	PROTO_MODBUS_RTU,
-	PROTO_TCP_CUSTOM,*/
-	PROTO_COUNT
-} ProtocolType_t;
+#include <stdint.h>
+#include "config/protocol.h"
 
+typedef struct Device Device_t;
+typedef struct DeviceConfig DeviceConfig_t;
 
-typedef struct {
+typedef struct DeviceDesc {
 	const char* model;
 	ProtocolType_t protocol;
-	const void* hw_desc;
+	const void* hw_desc; 
+	Device_t* (*create)(DeviceConfig_t* cfg);
+	void (*destroy)(Device_t* dev);
+
+	/* accès IO */
+	void* (*get_input_ptr)(Device_t* dev);
+	void* (*get_output_ptr)(Device_t* dev);
+
 } DeviceDesc_t;

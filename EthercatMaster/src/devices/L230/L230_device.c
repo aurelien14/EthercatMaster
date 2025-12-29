@@ -1,18 +1,28 @@
 #include "l230_device.h"
-#include "L230_device_desc.h"
-#include <stdlib.h>
+#include "core/system/memalloc.h"
 #include <string.h>
 
-Device_t* L230_Create(void)
+
+Device_t* L230_Create(DeviceConfig_t* cfg)
 {
-	L230_Device_t* dev = (L230_Device_t*)calloc(1, sizeof(L230_Device_t));
+	L230_Device_t* dev = (L230_Device_t*)CALLOC(1, sizeof(L230_Device_t));
 	if (!dev)
 		return NULL;
 
-	dev->base.name = "L230";
-	dev->base.dev = dev;
-	dev->base.desc = (DeviceDesc_t*)&L230_DEVICE_DESC;
-
-	return &dev->base;
+	return (Device_t*)dev;
 }
 
+void L230_Destroy(Device_t* dev) {
+	L230_Device_t* d = (L230_Device_t*)dev;
+	FREE(d);
+}
+
+void* L230_get_input_ptr(Device_t* dev) {
+	L230_Device_t* d = (L230_Device_t*)dev;
+	return d->ec_dev.tx_pdo;
+}
+
+void* L230_get_output_ptr(Device_t* dev) {
+	L230_Device_t* d = (L230_Device_t*)dev;
+	return d->ec_dev.rx_pdo;
+}

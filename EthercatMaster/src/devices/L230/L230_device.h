@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/device/device.h"
+#include "devices/ethercat_device.h"
 #include <stdint.h>
 
 typedef struct {
-	Device_t base;
+	EtherCAT_Device_t ec_dev;
 
 	/* états métier L230 */
 	float pt1_value;
@@ -14,4 +14,7 @@ typedef struct {
 	uint32_t status;
 } L230_Device_t;
 
-Device_t* L230_Create(void);
+Device_t* L230_Create(DeviceConfig_t* cfg);
+void L230_Destroy(Device_t* dev);
+void* L230_get_input_ptr(Device_t* dev);
+void* L230_get_output_ptr(Device_t* dev);

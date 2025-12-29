@@ -1,19 +1,24 @@
 #pragma once
+#include "config/protocol.h"
+#include "core/backend/backend_desc.h"
 #include "core/device/device_desc.h"
 #include "core/scheduler/task.h"
-#include "backend/ethercat/ethercat_config.h"
 #include "core/plc/tags_desc.h"
 #include <stdint.h>
-
-
+#include <stdbool.h>
 /*--------------------------------------------------*/
 /*			D R I V E R S    C O N F				*/
 /*--------------------------------------------------*/
 typedef struct BackendConfig {
-	ProtocolType_t type;
 	const char* name;    // ex: "ec0", "modbus1", etc
+	const BackendDesc_t* driver_desc;
 	union {
-		EtherCAT_config_t ethercat;
+		struct {
+			const char* ifname; // ex: "eth0" } ethercat;
+			uint8_t has_dc_clock;
+			uint32_t cycle_us;
+			uint32_t io_map_size;
+		} ethercat;
 		struct {
 			const char* ip_address;
 			uint16_t port;
@@ -29,16 +34,15 @@ typedef struct BackendConfig {
 /*--------------------------------------------------*/
 /*			D E V I C E S    C O N F				*/
 /*--------------------------------------------------*/
-typedef struct {
+typedef struct DeviceConfig {
 	const char* device_name;
-
+	uint16_t plc_address; //logical plc address
 	const DeviceDesc_t* device_desc;  // L230, DAIO16, etc
 	const char *backend_name;
 
 	union {
 		struct {
 			uint16_t expected_position;   // EtherCAT position
-			const char* ifname;
 		} ethercat;
 
 		struct {
@@ -70,7 +74,7 @@ typedef struct {
 	PLC_DataType_t dtype;
 	PLC_VarType_t vtype;
 
-	const char* device_name;   // lien SYMBOLIQUE
+	uint16_t device_addr;   // adresse logique PLC
 	uint16_t offset;
 	uint8_t  bit;
 } PLC_TagDesc_Config_t;
@@ -87,6 +91,9 @@ typedef struct {
 	DeviceConfig_t* devices;
 	size_t device_count;
 
-	PLC_TagDesc_Config_t* plc_tags_desc;
+	const PLC_TagDesc_Config_t* plc_tags_desc;
 	size_t plc_tags_count;
 } PLCSystemConfig_t;
+
+
+//#define PLC_ADDRESS_DEV_NONE  -1

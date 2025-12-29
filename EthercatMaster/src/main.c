@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	}
 
 	runtime_stop(p_runtime);
-
+	runtime_cleanup(p_runtime);
 	rt_timer_release();
 	return 0;
 }

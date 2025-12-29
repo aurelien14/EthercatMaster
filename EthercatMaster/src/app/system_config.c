@@ -1,9 +1,10 @@
 #include "config/system_config.h"
+#include "backend/ethercat/ethercat_desc.h"
 #include "devices/L230/L230_device_desc.h"
 #include "devices/L230/L230_ethercat_pdo.h"
 //#include "devices/DAIO16/daio16_device_desc.h"
 //#include "devices/DriveX/drive_modbus_desc.h"
-#include "core/backend/backend.h"
+//#include "core/backend/backend.h"
 #include "core/plc/tags_desc.h"
 
 /*--------------------------------------------------*/
@@ -12,12 +13,13 @@
 static const BackendConfig_t system_backends[] =
 {
 	{
-		.type = PROTO_ETHERCAT,
 		.name = "ec0",
+		.driver_desc = &ETHERCAT_DRIVER_DESC,
 		.ethercat = {
 			.ifname = "\\Device\\NPF_{FB092E67-7CA1-4E8F-966D-AC090D396487}",
-			.cycle_us = 1000,
+			.cycle_us = 10000,
 			.io_map_size = 4096,
+			.has_dc_clock = false,
 		}
 	},
 };
@@ -27,11 +29,12 @@ static const BackendConfig_t system_backends[] =
 /*--------------------------------------------------*/
 static const DeviceConfig_t system_devices[] = {
 	{
-		.device_name = "L230_1",
+		.device_name = "DEVICE_1",
+		.plc_address = 0,
 		.device_desc = &L230_DEVICE_DESC,
 		.backend_name = "ec0",
 		.ethercat = {
-			.expected_position = 1
+			.expected_position = 1,
 		}
 	},
 
@@ -61,35 +64,51 @@ static const DeviceConfig_t system_devices[] = {
 /*			P L C  T A G S   C O N F				*/
 /*--------------------------------------------------*/
 static const PLC_TagDesc_Config_t PLC_Tags_desc_arr[] = {
-	{
+	{//0
 		.name = "AV_CPU_Pt_X21",
 		.dtype = PLC_REAL,
 		.vtype = PLC_IN,
-		.device_name = "L230_1",
+		.device_addr = 0,
 		.offset = L230_IN(X21_CPU_Pt1.Pt_Value),
 	},
-	{
+	{//1
 		.name = "AV_CPU_Pt_X22",
 		.dtype = PLC_REAL,
 		.vtype = PLC_IN,
-		.device_name = "L230_1",
+		.device_addr = 0,
 		.offset = L230_IN(X22_CPU_Pt2.Pt_Value),
 	},
-	{
+	{//2
 		.name = "X15_1",
 		.dtype = PLC_BOOL,
 		.vtype = PLC_OUT,
-		.device_name = "L230_1",
+		.device_addr = 0,
 		.offset = L230_OUT(L230_DO_Byte0),
 		.bit = X15_BIT
 	},
-	{
+	{//3
 		.name = "X12_1",
 		.dtype = PLC_BOOL,
 		.vtype = PLC_OUT,
-		.device_name = "L230_1",
+		.device_addr = 0,
 		.offset = L230_OUT(L230_DO_Byte0),
 		.bit = X12_BIT
+	},
+	{//4
+		.name = "X13_1",
+		.dtype = PLC_BOOL,
+		.vtype = PLC_OUT,
+		.device_addr = 0,
+		.offset = L230_OUT(L230_DO_Byte0),
+		.bit = X13_BIT
+	},
+	{//5
+		.name = "X1_1",
+		.dtype = PLC_BOOL,
+		.vtype = PLC_OUT,
+		.device_addr = 0,
+		.offset = L230_OUT(L230_DO_Byte0),
+		.bit = X1_BIT
 	},
 	{
 		.name = "AV_CPC_HP",

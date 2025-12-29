@@ -4,6 +4,9 @@
 #include "core/time/time.h"
 #include <osal.h>
 
+//a enlever
+#include <stdio.h>
+
 static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 {
 	Scheduler_t* s = arg;
@@ -25,13 +28,13 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 			PLC_Task_t* t = &s->tasks[i];
 
 			if (osal_timespeccmp(&now, &t->next_deadline, >= )) {
-
+				//printf("[SCHEDULER] exec task %d\n", i);
 				ec_timet t0, t1, dt;
 
 				osal_get_monotonic_time(&t0);
 				t->run(t->context);
 				osal_get_monotonic_time(&t1);
-				t->init = 1;
+				//t->init = 1;
 				osal_time_diff(&t0, &t1, &dt);
 
 				t->exec_time_ns =
@@ -60,4 +63,4 @@ void scheduler_stop_thread(Scheduler_t* s)
 {
 	atomic_exchange_i32(&s->running, 0);
 	os_thread_join(s->thread, NULL);
-}
+};

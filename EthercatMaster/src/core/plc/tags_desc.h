@@ -15,6 +15,10 @@ typedef enum {
 	PLC_PV
 } PLC_VarType_t;
 
+#define SIZE_OF_BOOL	1
+#define SIZE_OF_INT		4
+#define SIZE_OF_DINT	4
+#define SIZE_OF_REAL	4
 
 typedef struct {
 	const char* name;
@@ -36,3 +40,4 @@ typedef struct {
 		} hmi;
 	};
 } PLC_TagDesc_t;
+

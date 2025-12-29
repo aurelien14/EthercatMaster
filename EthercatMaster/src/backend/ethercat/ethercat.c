@@ -1,9 +1,10 @@
 #include "ethercat.h"
 #include "ethercat_device_desc.h"
 #include "ethercat_thread.h"
-#include "config/config.h"
-#include <stdlib.h>
+#include "config/system_config.h"
+#include "core/system/memalloc.h"
 #include <stdio.h>
+#include "core/plateform/plateform.h"
 
 
 int ethercat_transition_safeop(EtherCAT_Driver_t* ec)
@@ -81,11 +82,11 @@ static void print_available_adapters(void) {
 	ec_adaptert* adapter = NULL;
 	ec_adaptert* head = NULL;
 
-	printf("	Available adapters:\n");
+	printf("Available adapters:\n");
 	head = adapter = ec_find_adapters();
 	while (adapter != NULL)
 	{
-		printf("		- %s  (%s)\n", adapter->name, adapter->desc);
+		printf("	- %s  (%s)\n", adapter->name, adapter->desc);
 		adapter = adapter->next;
 	}
 	ec_free_adapters(head);
@@ -128,13 +129,44 @@ static int ethercat_init(BackendDriver_t* b) {
 		return -1;
 	}
 	
-	d->iomap = calloc(1, d->iomap_size);
+	d->iomap = CALLOC(1, d->iomap_size);
 	if (!d->iomap) {
 		printf("[ECAT] Unable to allocate IOmap\n");
 		return -1;
 	}
 
 	printf("[ECAT] %d slaves detected\n", d->ctx.slavecount);
+	return 0;
+}
+
+
+static int ethercat_finalize_mapping(EtherCAT_Driver_t* ec) {
+	sleep(1000);
+	int size = ecx_config_map_group(&ec->ctx, ec->iomap, 0);
+
+	if (size == 0) {
+		printf("[CONFIG] erreur pendant le mapping");
+		return -1;
+	}
+	if (size > ec->iomap_size) {
+		printf("[CONFIG] tableau IOmap trop petit, taille:%llu, requière:%d", (unsigned long long)ec->iomap_size, size);
+		return -1;
+	}
+
+	for (int i = 0; i < ec->slave_count; i++) {
+		EtherCAT_Device_t* ec_dev = ec->slaves[i];
+		int pos = ec_dev->slave_index;
+
+		ec_slavet* sl = &ec->ctx.slavelist[pos];
+
+		ec_dev->rx_pdo = sl->inputs;
+		ec_dev->tx_pdo = sl->outputs;
+	}
+
+	if(ec->has_dc_clock)
+		ecx_configdc(&ec->ctx);
+
+	ethercat_transition_safeop(ec);
 	return 0;
 }
 
@@ -150,6 +182,7 @@ static int ethercat_start(BackendDriver_t* b)
 	return 0;
 }
 
+
 static int ethercat_stop(BackendDriver_t* b)
 {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
@@ -163,7 +196,6 @@ static int ethercat_stop(BackendDriver_t* b)
 }
 
 
-
 static int ethercat_process(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 	//ecx_send_processdata(&d->ctx);
@@ -172,66 +204,83 @@ static int ethercat_process(BackendDriver_t* b) {
 }
 
 
-static void ethercat_destroy(BackendDriver_t* b) {
-	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
-	free(d->iomap);
-	for (size_t i = 0; i < d->slave_count; i++)
-		free(d->slaves[i]);
-	free(d);
+static int ethercat_bind_device(BackendDriver_t* d, Device_t* dev, const DeviceConfig_t* dev_conf)
+{
+	EtherCAT_Driver_t* ed = (EtherCAT_Driver_t*)d;
+
+	ecx_contextt* ecx = &ed->ctx;
+	int pos = dev_conf->ethercat.expected_position;
+	if (pos > ecx->slavecount) {//ecat slave start à index 1
+		printf("[ECAT] error in configuration ethercat position %d, slave count: %d\n", pos, ecx->slavecount);
+		return -1;
+	}
+
+	ec_slavet* sl = &ed->ctx.slavelist[pos];
+
+	EtherCAT_Device_t* ec_dev = (EtherCAT_Device_t*)dev;
+
+	const DeviceDesc_t* d_desc = (DeviceDesc_t*)dev->desc;
+	const EtherCAT_DeviceDesc_t* hw_desc = (EtherCAT_DeviceDesc_t*)d_desc->hw_desc;
+
+	/* Vérification identité */
+	if (sl->eep_man != hw_desc->product_code ||
+		sl->eep_id != hw_desc->vendor_id) {
+		printf("[ECAT] mismatch at pos %d\n", pos);
+		return -1;
+	}
+
+	if(hw_desc->config_hook)
+		sl->PO2SOconfig = hw_desc->config_hook;
+
+	ec_dev->slave_index = pos;
+	ed->slaves[ed->slave_count++] = ec_dev;
+
+	return 0;
 }
 
 
 static const BackendDriverOps_t ops = {
 	.init = ethercat_init,
+	.bind = ethercat_bind_device,
+	.finalize = ethercat_finalize_mapping,
 	.start = ethercat_start,
 	.stop = ethercat_stop,
 	.process = ethercat_process,
-	.destroy = ethercat_destroy
 };
 
 
-EtherCAT_Driver_t* EtherCAT_Driver_Create(EtherCAT_config_t *config, int ethercat_index)
+
+BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int instance_index)
 {
-	EtherCAT_Driver_t* d = calloc(1, sizeof(*d));
+	EtherCAT_Driver_t* d = CALLOC(1, sizeof(EtherCAT_Driver_t));
 	if (!d)
 		return NULL;
-	snprintf(d->base.name, sizeof(d->base.name), "ec%d", ethercat_index);
-	d->base.protocol = PROTO_ETHERCAT;
-	d->base.ops = &ops;
-	d->thread_cycle_us = config->cycle_us;
-	d->iomap_size = config->io_map_size;
 
-	if (!ecx_init(&d->ctx, config->ifname)) {
-		free(d);
+	// Configuration de base
+	BackendDriver_t* base = &d->base;
+	base->ops = &ops;
+	snprintf(base->system_name, sizeof(base->system_name), "ec%d", instance_index);
+	d->thread_cycle_us = config->ethercat.cycle_us;
+	d->iomap_size = config->ethercat.io_map_size;
+	d->has_dc_clock = config->ethercat.has_dc_clock;
+
+	// Initialisation SOEM EtherCAT
+	if (!ecx_init(&d->ctx, config->ethercat.ifname)) {
 		print_available_adapters();
+		FREE(d);
 		return NULL;
 	}
-	return d;
+
+	return base;
 }
 
 
-int ethercat_finalize_mapping(EtherCAT_Driver_t* ec) {
-	int size = ecx_config_map_group(&ec->ctx, ec->iomap, 0);
-
-	if (size == 0) {
-		printf("[CONFIG] erreur pendant le mapping");
-		return -1;
-	}
-	if (size > ec->iomap_size) {
-		printf("[CONFIG] tableau IOmap trop petit, taille:%llu, requière:%d", (unsigned long long)ec->iomap_size, size);
-		return -1;
-	}
-
-	for (int i = 0; i < ec->slave_count; i++) {
-		EtherCAT_SlaveRuntime_t* ecat_rt = ec->slaves[i];
-		ec_slavet* sl = &ec->ctx.slavelist[i + 1];
-		ecat_rt->tx_pdo = sl->inputs;
-		ecat_rt->rx_pdo = sl->outputs;
-	}
-
-	ecx_configdc(&ec->ctx);
-
-	ethercat_transition_safeop(ec);
-	return 0;
+void EtherCAT_Driver_Destroy(BackendDriver_t* b) {
+	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+	FREE(d->iomap);
+	FREE(d);
 }
+
+
+
 

@@ -3,21 +3,23 @@
 #include "core/runtime/runtime.h"
 #include "backend/ethercat/ethercat.h"
 #include "devices/L230/L230_ethercat_pdo.h"
+#include "core/plc/tags.h"
 
 int plc_task1_run(void* ctx) {
 	Runtime_t* r = (Runtime_t*)ctx;
-
-	//if(r.)
-
+	static int counter = 0;
+	static int value = 0;
 	// Exemple de tâche PLC qui effectue une opération simple
 	PLC_Task_t* task = (PLC_Task_t*)ctx;
-	static int counter = 0;
-
-	EtherCAT_Driver_t* ecat = (EtherCAT_Driver_t * )r->backends[0];
-	EtherCAT_SlaveRuntime_t* ecat_r0 = ecat->slaves[0];
-	L230_RX_PDO_t* L230_OUTPUT = ecat_r0->rx_pdo;
-	L230_OUTPUT->L230_DO_Byte0_bits.X15_Out0 = 1;
-
+	PLC_Tag_t* x15 = &r->tags[2];
+	
+	if (counter > 10000) {
+		value = !value;
+		plc_tag_write(x15, 1);
+		counter = 0;
+		printf("Value=%d\n", value);
+		fflush(stdout);
+	}
 
 	counter++;
 	return 0; // Retourner 0 pour indiquer le succès

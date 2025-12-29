@@ -1,9 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
 #include <soem/soem.h>
-
 
 typedef struct {
 	uint32_t vendor_id;

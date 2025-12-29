@@ -1,7 +1,7 @@
 #pragma once
-#include "ethercat_config.h"
+#include "config/system_config.h"
 #include "core/backend/backend.h"
-#include "ethercat_slave_runtime.h"
+#include "devices/ethercat_device.h"
 #include <soem/soem.h>
 
 #define ECAT_MAX_SLAVES 32	//TODO: mettre dans un fichier commun config.h
@@ -16,14 +16,16 @@ typedef struct Ethercat_Stats {
 	uint64_t total_cycles;
 } Ethercat_Stats_t;
 
+
 typedef struct {
 	BackendDriver_t base;
 
 	ecx_contextt ctx;
 	uint8_t* iomap;
 	size_t iomap_size;
+	uint8_t has_dc_clock;
 
-	EtherCAT_SlaveRuntime_t* slaves[ECAT_MAX_SLAVES];
+	EtherCAT_Device_t* slaves[ECAT_MAX_SLAVES];
 	size_t slave_count;
 
 	//thread ethercat
@@ -37,4 +39,6 @@ typedef struct {
 } EtherCAT_Driver_t;
 
 
-EtherCAT_Driver_t* EtherCAT_Driver_Create(EtherCAT_config_t* config, int ethercat_index);
+BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int instance_index);
+void EtherCAT_Driver_Destroy(BackendDriver_t* b);
+

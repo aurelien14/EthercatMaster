@@ -3,9 +3,8 @@
 #include "core/device/device.h"
 
 typedef struct {
+	Device_t base;
 	uint16_t slave_index;
 	void* rx_pdo;
 	void* tx_pdo;
-
-	Device_t* device;
-} EtherCAT_SlaveRuntime_t;
+} EtherCAT_Device_t;

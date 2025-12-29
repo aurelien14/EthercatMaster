@@ -69,3 +69,4 @@ static inline void wait_until_qpc_2(LARGE_INTEGER deadline, LARGE_INTEGER freq)
 		}
 	}
 }
+

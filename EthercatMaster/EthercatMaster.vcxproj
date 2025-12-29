@@ -19,14 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend\ethercat\ethercat_desc.c" />
+    <ClCompile Include="src\core\backend\backend.c" />
+    <ClCompile Include="src\core\device\device.c" />
     <ClCompile Include="src\core\plateform\win32\sleep.c" />
     <ClCompile Include="src\core\plateform\win32\thread.c" />
     <ClCompile Include="src\core\plc\tags.c" />
+    <ClCompile Include="src\core\runtime\device_lookup.c" />
+    <ClCompile Include="src\core\system\memalloc.c" />
     <ClCompile Include="src\core\time\time.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\app\plc_task1.c" />
     <ClCompile Include="src\backend\ethercat\ethercat.c" />
-    <ClCompile Include="src\backend\ethercat\ethercat_bind.c" />
     <ClCompile Include="src\backend\ethercat\ethercat_thread.c" />
     <ClCompile Include="src\app\system_config.c" />
     <ClCompile Include="src\core\scheduler\scheduler.c" />
@@ -38,15 +42,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app\plc_tasks.h" />
-    <ClInclude Include="src\backend\ethercat\ethercat_bind.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_config.h" />
-    <ClInclude Include="src\backend\ethercat\ethercat_slave_runtime.h" />
+    <ClInclude Include="src\backend\ethercat\ethercat_desc.h" />
+    <ClInclude Include="src\devices\ethercat_device.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_thread.h" />
     <ClInclude Include="src\config\config.h" />
     <ClInclude Include="src\core\backend\backend.h" />
     <ClInclude Include="src\backend\ethercat\ethercat.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_device_desc.h" />
     <ClInclude Include="src\config\system_config.h" />
+    <ClInclude Include="src\core\backend\backend_desc.h" />
+    <ClInclude Include="src\config\protocol.h" />
     <ClInclude Include="src\core\device\device.h" />
     <ClInclude Include="src\core\device\device_desc.h" />
     <ClInclude Include="src\core\plateform\plateform.h" />
@@ -56,9 +62,11 @@
     <ClInclude Include="src\core\plateform\win32\thread.h" />
     <ClInclude Include="src\core\plc\tags.h" />
     <ClInclude Include="src\core\plc\tags_desc.h" />
+    <ClInclude Include="src\core\runtime\device_lookup.h" />
     <ClInclude Include="src\core\scheduler\task.h" />
     <ClInclude Include="src\core\scheduler\scheduler.h" />
     <ClInclude Include="src\core\scheduler\scheduler_thread.h" />
+    <ClInclude Include="src\core\system\memalloc.h" />
     <ClInclude Include="src\core\time\time.h" />
     <ClInclude Include="src\devices\L230\L230_device.h" />
     <ClInclude Include="src\devices\L230\L230_device_desc.h" />

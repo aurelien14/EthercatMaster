@@ -3,9 +3,8 @@
 #include "core/device/device.h"
 #include "core/backend/backend.h"
 #include "core/scheduler/scheduler.h"
+#include "core/plc/tags.h"
 
-#define MAX_BACKENDS 8
-#define MAX_DEVICES  64
 
 #if 0
 typedef struct {
@@ -34,13 +33,17 @@ typedef struct {
 	Scheduler_t plc;
 	long system_is_running;
 
+
+	PLC_Tag_t* tags;
+	size_t     tag_count;
+
 } Runtime_t;
 
 
 
 Runtime_t* create_runtime(void);
 
-int runtime_init(Runtime_t *runtime, PLCSystemConfig_t *plc_config);
+int runtime_init(Runtime_t *runtime, const PLCSystemConfig_t *plc_config);
 void runtime_start(Runtime_t* runtime);
 void runtime_process(Runtime_t*);
 void runtime_stop(Runtime_t*);

@@ -7,3 +7,4 @@
 #include "win32/sleep.h"
 #endif
 
+void sleep(unsigned long ms);
