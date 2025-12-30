@@ -1,6 +1,5 @@
 #pragma once
 #include "core/device/buffered_device.h"
-//#include "ethercat.h"
 
 typedef struct EtherCAT_Driver EtherCAT_Driver_t;
 
