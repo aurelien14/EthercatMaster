@@ -187,8 +187,6 @@ static int ethercat_finalize_mapping(BackendDriver_t* drv) {
 			return -1;
 		}*/
 
-		//TODO: supprimer ethercat_device_init, ne sert à rien de mettre à zero car calloc
-		//ethercat_device_init(&ec_dev->base, dev_conf);
 		buffered_device_init(&ec_dev->base, sl->Obytes, sl->Ibytes);
 	}
 

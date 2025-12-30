@@ -17,5 +17,3 @@ typedef struct {
 
 } EtherCAT_Device_t;
 
-
-int ethercat_device_init(EtherCAT_Device_t* ecat_dev, DeviceConfig_t* cfg);
