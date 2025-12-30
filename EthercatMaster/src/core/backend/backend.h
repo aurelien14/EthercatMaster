@@ -29,7 +29,6 @@ typedef struct {
 // - publie les sorties
 // - prépare le buffer suivant
 // - garantit la cohérence temporelle
-
 struct BackendDriver {
 	char system_name[8];
 	int instance_index;
