@@ -106,7 +106,7 @@ static OSAL_THREAD_HANDLE ecat_watchdog_thread(void* arg) {
 
 	while (atomic_cas_i32(&d->running, 1, 1)) {
 		// Vérifier que le cycle RT progresse
-		uint64_t current_cycle = atomic_cas_i32(&sys->cycle_count);
+		uint64_t current_cycle = atomic_cas_i32(&d->stats.total_cycles);
 		if (current_cycle == last_cycle) {
 			printf("[WD] ALERTE: Thread RT bloqué!\n");
 			atomic_fetch_add(&sys->errors_count, 1);
@@ -114,7 +114,7 @@ static OSAL_THREAD_HANDLE ecat_watchdog_thread(void* arg) {
 		last_cycle = current_cycle;
 
 		// Vérifier l'état des esclaves
-		int16_t state = ecx_readstate(&sys->ecx_context);
+		int16_t state = ecx_readstate(&d->ctx);
 		for (int i = 1; i <= sys->ecx_context.slavecount; i++) {
 			if (sys->ecx_context.slavelist[i].state != EC_STATE_OPERATIONAL) {
 				atomic_store(&sys->system_state, state);
