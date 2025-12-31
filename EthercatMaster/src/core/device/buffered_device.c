@@ -19,8 +19,8 @@ int buffered_device_init(BufferedDevice_t* bdev, size_t in_size, size_t out_size
 
     // 2. Allocation des buffers de sorties vu du Device (Sorties)
     if (out_size > 0) {
-        bdev->out_buffers[0] = calloc(1, out_size);
-        bdev->out_buffers[1] = calloc(1, out_size);
+        bdev->out_buffers[0] = CALLOC(1, out_size);
+        bdev->out_buffers[1] = CALLOC(1, out_size);
 
         if (!bdev->out_buffers[0] || !bdev->out_buffers[1]) {
             goto allocation_failed;
@@ -29,8 +29,8 @@ int buffered_device_init(BufferedDevice_t* bdev, size_t in_size, size_t out_size
 
     // 3. Allocation des buffers d'entrées vu du Device (Entrées)
     if (in_size > 0) {
-        bdev->in_buffers[0] = calloc(1, in_size);
-        bdev->in_buffers[1] = calloc(1, in_size);
+        bdev->in_buffers[0] = CALLOC(1, in_size);
+        bdev->in_buffers[1] = CALLOC(1, in_size);
 
         if (!bdev->in_buffers[0] || !bdev->in_buffers[1]) {
             goto allocation_failed;

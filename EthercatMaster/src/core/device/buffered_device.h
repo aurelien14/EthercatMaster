@@ -8,7 +8,6 @@ typedef struct {
     uint8_t* in_buffers[2];
     size_t out_size;
     size_t in_size;
-
 } BufferedDevice_t;
 
 

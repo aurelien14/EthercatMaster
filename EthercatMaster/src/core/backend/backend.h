@@ -21,8 +21,8 @@ typedef struct {
 	int (*process)(BackendDriver_t*);
 	void (*sync)(BackendDriver_t* d); //synchronise double buffering
 	int (*stop)(BackendDriver_t*);
-	void* (*get_input_ptr)(BackendDriver_t*, Device_t*);
-	void* (*get_output_ptr)(BackendDriver_t*, Device_t*);
+	uint8_t* (*get_input_ptr)(BackendDriver_t*, Device_t*);
+	uint8_t* (*get_output_ptr)(BackendDriver_t*, Device_t*);
 } BackendDriverOps_t;
 
 //sync appelé à la fin d’un cycle PLC
@@ -38,6 +38,7 @@ struct BackendDriver {
 	// Les deux seuls index pour TOUT le bus EtherCAT
 	atomic_i32_t active_out_buffer_idx;
 	atomic_i32_t active_in_buffer_idx;
+	atomic_i32_t rt_out_buffer_idx;
 };
 
 

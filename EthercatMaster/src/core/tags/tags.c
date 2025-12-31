@@ -70,9 +70,11 @@ int plc_tag_write(const PLC_Tag_t* tag, const void* in_value)
 	if (tag->vtype == PLC_IN)
 		return -1;
 
+
 	switch (tag->vtype) {
 
 	case PLC_OUT: {
+
 		Device_t* dev = tag->io.device;
 		BackendDriver_t* drv = dev ? dev->driver : NULL;
 

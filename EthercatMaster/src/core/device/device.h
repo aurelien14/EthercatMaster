@@ -2,9 +2,10 @@
 #include "device_desc.h"
 #include "config/system_config.h"
 
+#define DEVICE_NAME_MAX	64
 
 typedef struct Device {
-	const char* name;
+	char name[DEVICE_NAME_MAX];
 	uint16_t plc_addr;
 	BackendDriver_t* driver;
 	const DeviceDesc_t* desc;
@@ -14,3 +15,4 @@ typedef struct Device {
 
 
 Device_t* device_create(DeviceConfig_t* cfg);
+void device_destroy(Device_t* dev);

@@ -11,8 +11,8 @@ typedef struct {
     uint8_t* soem_outputs;
     uint8_t* soem_inputs;
 
-    size_t out_size;
-    size_t in_size;
+    size_t rx_pdo_size;
+    size_t tx_pdo_size;
 
 } EtherCAT_Device_t;
 

@@ -26,37 +26,32 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 
 	while(atomic_cas_i32(&d->running, 1, 1)) {
 
-		/* --- EtherCAT cycle --- */
+		/* --- Synchronisation avec le monde PLC --- */
+		int in_back = (atomic_load_i32(&d->base.active_in_buffer_idx) == 0) ? 1 : 0;
+		int out_idx = atomic_load_i32(&d->base.rt_out_buffer_idx);
+
+		// 1) SORTIES : buffers -> SOEM outputs
+		for (int i = 0; i < d->slave_count; i++) {
+			EtherCAT_Device_t* dev = d->slaves[i];
+			if (dev->base.out_size > 0) {
+				memcpy(dev->soem_outputs, dev->base.out_buffers[out_idx], dev->base.out_size);
+			}
+		}
+
+		// 2) EtherCAT exchange
 		ecx_send_processdata(&d->ctx);
 		ecx_receive_processdata(&d->ctx, EC_TIMEOUTRET);
 
-		/* --- Synchronisation avec le monde PLC --- */
-		// 1. LES ENTRÉES (Esclave -> Master) : On remplit le "back_idx" pour le PLC
-		int back_input = atomic_load_i32(&d->base.active_in_buffer_idx) == 0 ? 1 : 0;
-
-		// 2. LES SORTIES (Master -> Esclave) : On prend ce que le PLC a validé
-		int active_tx = atomic_load_i32(&d->base.active_out_buffer_idx);
-
+		// 3) ENTRÉES : SOEM inputs -> buffers
 		for (int i = 0; i < d->slave_count; i++) {
 			EtherCAT_Device_t* dev = d->slaves[i];
-			BufferedDevice_t* bdev = &dev->base;
-
-			// --- ENTRÉES : SOEM -> rx_buffers ---
-			// Les TX_PDO de l'esclave arrivent dans soem_inputs
-			if (dev->in_size > 0) {
-				memcpy(bdev->in_buffers[back_input], dev->soem_inputs, dev->in_size);
-			}
-
-			// --- SORTIES : tx_buffers -> SOEM ---
-			// On envoie le buffer que le PLC est en train de NE PAS utiliser
-			// (L'index active_tx est celui où le PLC écrit, on prend donc l'autre pour l'envoi)
-			int out_idx = (active_tx == 0) ? 1 : 0;
-			if (dev->out_size > 0) {
-				memcpy(dev->soem_outputs, bdev->out_buffers[out_idx], dev->out_size);
+			if (dev->base.in_size > 0) {
+				memcpy(dev->base.in_buffers[in_back], dev->soem_inputs, dev->base.in_size);
 			}
 		}
-		// On publie les nouvelles entrées pour le PLC
-		atomic_store_i32(&d->base.active_out_buffer_idx, back_input);
+
+		// 4) Publication des entrées pour le PLC
+		atomic_store_i32(&d->base.active_in_buffer_idx, in_back);
 
 
 		/* --- Mesures --- */
@@ -126,4 +121,3 @@ void ethercat_stop_thread(EtherCAT_Driver_t* d)
 	atomic_exchange_i32(&d->running, 0);
 	os_thread_join(d->thread, NULL);
 }
-

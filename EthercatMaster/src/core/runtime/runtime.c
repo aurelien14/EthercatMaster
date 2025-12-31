@@ -179,7 +179,10 @@ int runtime_init(Runtime_t *runtime, const PLCSystemConfig_t* plc_config) {
 	for (size_t i = 0; i < plc_config->device_count; i++) {
 		BackendDriver_t* drv = runtime->backends[i];
 		if (drv != NULL && drv->ops->finalize)
-			drv->ops->finalize(drv);
+			if (drv->ops->finalize(drv)) {
+				printf("[RUNTIME] Erreur pendant la finalisation du driver %s\n", drv->system_name);
+				return -1;
+			}
 	}
 
 
@@ -279,8 +282,7 @@ void runtime_cleanup(Runtime_t* runtime) {
 	// Libérer les devices
 	for (size_t i = 0; i < runtime->device_count; i++) {
 		Device_t* dev = runtime->devices[i];
-		if(dev->desc->destroy)
-			dev->desc->destroy(dev);
+		device_destroy(dev);
 		runtime->devices[i] = NULL;
 	}
 	runtime->device_count = 0;
