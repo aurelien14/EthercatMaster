@@ -29,11 +29,11 @@ typedef struct {
 			uint32_t index;   // variables internes
 		} internal;
 	};
-} PLC_Tag_t;
+	PLC_TagValue_t initial_value;
+	PLC_TagValue_t value;
+} PLC_Variable_t;
 
 
 
-
-PLC_Tag_t* create_plc_tags(size_t count);
-int plc_tag_read(const PLC_Tag_t* tag, void* out_value);
-int plc_tag_write(const PLC_Tag_t* tag, const void* in_value);
+int plc_tag_read(const PLC_Variable_t* tag, void* out_value);
+int plc_tag_write(const PLC_Variable_t* tag, const void* value);

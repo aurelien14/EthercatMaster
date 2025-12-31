@@ -59,9 +59,3 @@ void buffered_device_cleanup(BufferedDevice_t* bdev) {
         }
     }
 }
-
-
-void buffered_device_swap_rx(BufferedDevice_t* dev) {
-    //int current = atomic_load_i32(&dev->base.driver->active_rx_idx);
-    //atomic_store_i32(&dev->base.driver->active_rx_idx, current == 0 ? 1 : 0);
-}

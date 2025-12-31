@@ -29,6 +29,11 @@ typedef struct EtherCAT_Driver {
 	EtherCAT_Device_t* slaves[ECAT_MAX_SLAVES];
 	size_t slave_count;
 
+	//Double buffuring
+	atomic_i32_t active_out_buffer_idx;
+	atomic_i32_t active_in_buffer_idx;
+	atomic_i32_t rt_out_buffer_idx;
+
 	//thread ethercat
 	volatile int running;
 	uint32_t thread_cycle_us; //temps du cycle thread ethercat en microsecondes

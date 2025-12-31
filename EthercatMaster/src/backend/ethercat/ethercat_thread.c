@@ -27,14 +27,14 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 	while(atomic_cas_i32(&d->running, 1, 1)) {
 
 		/* --- Synchronisation avec le monde PLC --- */
-		int in_back = (atomic_load_i32(&d->base.active_in_buffer_idx) == 0) ? 1 : 0;
-		int out_idx = atomic_load_i32(&d->base.rt_out_buffer_idx);
+		int in_back = (atomic_load_i32(&d->active_in_buffer_idx) == 0) ? 1 : 0;
+		int out_idx = atomic_load_i32(&d->rt_out_buffer_idx);
 
 		// 1) SORTIES : buffers -> SOEM outputs
 		for (int i = 0; i < d->slave_count; i++) {
 			EtherCAT_Device_t* dev = d->slaves[i];
-			if (dev->base.out_size > 0) {
-				memcpy(dev->soem_outputs, dev->base.out_buffers[out_idx], dev->base.out_size);
+			if (dev->out_size > 0) {
+				memcpy(dev->soem_outputs, dev->out_buffers[out_idx], dev->out_size);
 			}
 		}
 
@@ -45,13 +45,13 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 		// 3) ENTRÉES : SOEM inputs -> buffers
 		for (int i = 0; i < d->slave_count; i++) {
 			EtherCAT_Device_t* dev = d->slaves[i];
-			if (dev->base.in_size > 0) {
-				memcpy(dev->base.in_buffers[in_back], dev->soem_inputs, dev->base.in_size);
+			if (dev->in_size > 0) {
+				memcpy(dev->in_buffers[in_back], dev->soem_inputs, dev->in_size);
 			}
 		}
 
 		// 4) Publication des entrées pour le PLC
-		atomic_store_i32(&d->base.active_in_buffer_idx, in_back);
+		atomic_store_i32(&d->active_in_buffer_idx, in_back);
 
 
 		/* --- Mesures --- */
@@ -99,6 +99,52 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 	}
 
 	return 0;
+}
+
+static OSAL_THREAD_HANDLE ecat_watchdog_thread(void* arg) {
+	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)arg;
+
+	while (atomic_cas_i32(&d->running, 1, 1)) {
+		// Vérifier que le cycle RT progresse
+		uint64_t current_cycle = atomic_cas_i32(&sys->cycle_count);
+		if (current_cycle == last_cycle) {
+			printf("[WD] ALERTE: Thread RT bloqué!\n");
+			atomic_fetch_add(&sys->errors_count, 1);
+		}
+		last_cycle = current_cycle;
+
+		// Vérifier l'état des esclaves
+		int16_t state = ecx_readstate(&sys->ecx_context);
+		for (int i = 1; i <= sys->ecx_context.slavecount; i++) {
+			if (sys->ecx_context.slavelist[i].state != EC_STATE_OPERATIONAL) {
+				atomic_store(&sys->system_state, state);
+
+				printf("[WD] Esclave %d en erreur, état: 0x%02x\n",
+					i, sys->ecx_context.slavelist[i].state);
+
+				// Tentative de récupération
+				sys->ecx_context.slavelist[i].state = EC_STATE_OPERATIONAL;
+				ecx_writestate(&sys->ecx_context, i);
+			}
+		}
+
+		/*if (prev_state != state) {
+			atomic_store(&sys->system_state, state);
+			printf("[WD] Changement d'état de Ethercat, state=0x%02x\n", state);
+			prev_state = state;
+		}*/
+
+#if defined JITTER_CALC
+		// Afficher les statistiques
+		uint32_t jitter = atomic_load(&sys->max_jitter_us);
+		uint32_t jitter_overflow = atomic_load(&sys->jitter_overflow_count);
+		if (jitter > 100 || jitter_overflow > 0) {
+			printf("[WD] Jitter max: %u us, overflow: %d\n", jitter, jitter_overflow);
+		}
+#endif
+
+		Sleep(1000); // Vérification chaque seconde
+	}
 }
 
 

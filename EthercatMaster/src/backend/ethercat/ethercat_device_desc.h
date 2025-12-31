@@ -10,4 +10,5 @@ typedef struct {
 	size_t   rx_pdo_size;
 	size_t   tx_pdo_size;
 	EtherCAT_ConfigHook config_hook;
+	uint16_t watchdog;
 } EtherCAT_DeviceDesc_t;

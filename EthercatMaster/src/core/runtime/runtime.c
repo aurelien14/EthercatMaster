@@ -49,18 +49,19 @@ static BackendDriver_t* runtime_find_backend(Runtime_t* runtime, const char* bac
 
 
 static int runtime_create_plc_tag(Runtime_t* runtime, const PLCSystemConfig_t* plc_config) {
-	PLC_Tag_t* tags = CALLOC(1, plc_config->plc_tags_count * sizeof(PLC_Tag_t));
+
+	PLC_Variable_t* tags = CALLOC(1, plc_config->plc_variables_count * sizeof(PLC_Variable_t));
 	if (tags == NULL) {
 		printf("[RUNTIME] Unable to allocate memory for tags\n");
 		return -1;
 	}
 	runtime->tags = tags;
-	runtime->tag_count = plc_config->plc_tags_count;
+	runtime->tag_count = plc_config->plc_variables_count;
 
-	for (size_t i = 0; i < plc_config->plc_tags_count; i++) {
+	for (size_t i = 0; i < plc_config->plc_variables_count; i++) {
 
-		const PLC_TagDesc_Config_t* tc = &plc_config->plc_tags_desc[i];
-		PLC_Tag_t* tag = &tags[i];
+		const PLC_Variables_Config_t* tc = &plc_config->plc_variables[i];
+		PLC_Variable_t* tag = &tags[i];
 		if (tag == NULL) {
 			printf("[RUNTIME] Error in tag number %ul\n", (unsigned int)i);
 			continue;
@@ -70,6 +71,7 @@ static int runtime_create_plc_tag(Runtime_t* runtime, const PLCSystemConfig_t* p
 		tag->name = tc->name;
 		tag->dtype = tc->dtype;
 		tag->vtype = tc->vtype;
+		tag->initial_value = tc->initial_value;
 
 		switch (tc->vtype) {
 

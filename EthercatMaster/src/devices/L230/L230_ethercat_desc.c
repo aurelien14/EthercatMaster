@@ -12,7 +12,7 @@ static int config_hook_EL230(ecx_contextt* ctx, uint16_t slave)
 	pslave->SM[3].SMflags = 0x20;
 
 	uint16_t new_timeout = L230_TIME_OUT_PROCESS_DATA;
-	ecx_FPWRw(&ctx->port, pslave->configadr, 0x420,
+	//ecx_FPWRw(&ctx->port, pslave->configadr, 0x420, \
 		new_timeout, EC_TIMEOUTRET);
 
 	return 1;

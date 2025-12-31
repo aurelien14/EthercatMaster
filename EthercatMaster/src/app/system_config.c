@@ -63,7 +63,7 @@ static const DeviceConfig_t system_devices[] = {
 /*--------------------------------------------------*/
 /*			P L C  T A G S   C O N F				*/
 /*--------------------------------------------------*/
-static const PLC_TagDesc_Config_t PLC_Tags_desc_arr[] = {
+static const PLC_Variables_Config_t PLC_Tags_desc_arr[] = {
 	{//0
 		.name = "AV_CPU_Pt_X21",
 		.dtype = PLC_REAL,
@@ -118,12 +118,14 @@ static const PLC_TagDesc_Config_t PLC_Tags_desc_arr[] = {
 	{
 		.name = "SP_Temperature",
 		.dtype = PLC_REAL,
-		.vtype = PLC_HMI
+		.vtype = PLC_HMI,
+		.initial_value.real_value = 23.0f,
 	},
 };
 
-
-
+#define X15	2
+#define X12	3
+#define X13	4
 
 /*--------------------------------------------------*/
 /*			G L O B A L  P L C    C O N F			*/
@@ -135,6 +137,6 @@ const PLCSystemConfig_t PLC_SYSTEM_CONFIG = {
 	.devices = (DeviceConfig_t*)system_devices,
 	.device_count = sizeof(system_devices) / sizeof(system_devices[0]),
 
-	.plc_tags_desc = PLC_Tags_desc_arr,
-	.plc_tags_count = sizeof(PLC_Tags_desc_arr) / sizeof(PLC_Tags_desc_arr[0])
+	.plc_variables = PLC_Tags_desc_arr,
+	.plc_variables_count = sizeof(PLC_Tags_desc_arr) / sizeof(PLC_Tags_desc_arr[0])
 };

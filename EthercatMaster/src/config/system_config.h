@@ -77,7 +77,8 @@ typedef struct {
 	uint16_t device_addr;   // adresse logique PLC
 	uint16_t offset;
 	uint8_t  bit;
-} PLC_TagDesc_Config_t;
+	PLC_TagValue_t initial_value;
+} PLC_Variables_Config_t;
 
 
 
@@ -91,8 +92,8 @@ typedef struct {
 	DeviceConfig_t* devices;
 	size_t device_count;
 
-	const PLC_TagDesc_Config_t* plc_tags_desc;
-	size_t plc_tags_count;
+	const PLC_Variables_Config_t* plc_variables;
+	size_t plc_variables_count;
 } PLCSystemConfig_t;
 
 
