@@ -27,14 +27,14 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 	while(atomic_cas_i32(&d->running, 1, 1)) {
 
 		/* --- Synchronisation avec le monde PLC --- */
-		int in_back = (atomic_load_i32(&d->base.active_in_buffer_idx) == 0) ? 1 : 0;
-		int out_idx = atomic_load_i32(&d->base.rt_out_buffer_idx);
+		int in_back = (atomic_load_i32(&d->active_in_buffer_idx) == 0) ? 1 : 0;
+		int out_idx = atomic_load_i32(&d->rt_out_buffer_idx);
 
 		// 1) SORTIES : buffers -> SOEM outputs
 		for (int i = 0; i < d->slave_count; i++) {
 			EtherCAT_Device_t* dev = d->slaves[i];
-			if (dev->base.out_size > 0) {
-				memcpy(dev->soem_outputs, dev->base.out_buffers[out_idx], dev->base.out_size);
+			if (dev->out_size > 0) {
+				memcpy(dev->soem_outputs, dev->out_buffers[out_idx], dev->out_size);
 			}
 		}
 
@@ -45,13 +45,13 @@ static OSAL_THREAD_HANDLE ethercat_thread(void* arg)
 		// 3) ENTRÉES : SOEM inputs -> buffers
 		for (int i = 0; i < d->slave_count; i++) {
 			EtherCAT_Device_t* dev = d->slaves[i];
-			if (dev->base.in_size > 0) {
-				memcpy(dev->base.in_buffers[in_back], dev->soem_inputs, dev->base.in_size);
+			if (dev->in_size > 0) {
+				memcpy(dev->in_buffers[in_back], dev->soem_inputs, dev->in_size);
 			}
 		}
 
 		// 4) Publication des entrées pour le PLC
-		atomic_store_i32(&d->base.active_in_buffer_idx, in_back);
+		atomic_store_i32(&d->active_in_buffer_idx, in_back);
 
 
 		/* --- Mesures --- */

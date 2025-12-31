@@ -42,9 +42,9 @@ int plc_tag_read(const PLC_Tag_t* tag, void* out_value)
 		Device_t* dev = tag->io.device;
 		BackendDriver_t* drv = dev ? dev->driver : NULL;
 
-		if (!drv || !drv->ops || !drv->ops->get_input_ptr) return -1;
+		if (!drv || !drv->ops || !drv->ops->get_input_data) return -1;
 
-		uint8_t* base = drv->ops->get_input_ptr(drv, dev);
+		uint8_t* base = drv->ops->get_input_data(drv, dev);
 		if (!base) return -1;
 
 		uint8_t* addr = base + tag->io.offset;
@@ -78,10 +78,10 @@ int plc_tag_write(const PLC_Tag_t* tag, const void* in_value)
 		Device_t* dev = tag->io.device;
 		BackendDriver_t* drv = dev ? dev->driver : NULL;
 
-		if (!drv || !drv->ops || !drv->ops->get_output_ptr)
+		if (!drv || !drv->ops || !drv->ops->get_output_data)
 			return -1;
 
-		uint8_t* base = (uint8_t*)drv->ops->get_output_ptr(drv, dev);
+		uint8_t* base = (uint8_t*)drv->ops->get_output_data(drv, dev);
 		if (!base)
 			return -1;
 

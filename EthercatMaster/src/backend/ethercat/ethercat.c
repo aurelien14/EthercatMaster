@@ -119,6 +119,63 @@ static void ethercat_stats_init(EtherCAT_Driver_t* d)
 }
 
 
+static void ethercat_buffer_cleanup(EtherCAT_Device_t* dev) {
+	if (!dev) return;
+
+	for (int i = 0; i < 2; i++) {
+		if (dev->out_buffers[i]) {
+			FREE(dev->out_buffers[i]);
+			dev->out_buffers[i] = NULL;
+		}
+		if (dev->in_buffers[i]) {
+			FREE(dev->in_buffers[i]);
+			dev->in_buffers[i] = NULL;
+		}
+	}
+}
+
+
+static int ethercat_buffers_init(EtherCAT_Device_t* bdev, size_t in_size, size_t out_size) {
+	if (!bdev) return -1;
+
+	// 1. Sécurité : Initialisation forcée à NULL de tous les pointeurs
+	// Cela évite de tenter un FREE sur une valeur aléatoire en cas d'erreur
+	for (int i = 0; i < 2; i++) {
+		bdev->out_buffers[i] = NULL;
+		bdev->in_buffers[i] = NULL;
+	}
+
+	bdev->out_size = out_size;
+	bdev->in_size = in_size;
+
+	// 2. Allocation des buffers de sorties vu du Device (Sorties)
+	if (out_size > 0) {
+		bdev->out_buffers[0] = CALLOC(1, out_size);
+		bdev->out_buffers[1] = CALLOC(1, out_size);
+
+		if (!bdev->out_buffers[0] || !bdev->out_buffers[1]) {
+			goto allocation_failed;
+		}
+	}
+
+	// 3. Allocation des buffers d'entrées vu du Device (Entrées)
+	if (in_size > 0) {
+		bdev->in_buffers[0] = CALLOC(1, in_size);
+		bdev->in_buffers[1] = CALLOC(1, in_size);
+
+		if (!bdev->in_buffers[0] || !bdev->in_buffers[1]) {
+			goto allocation_failed;
+		}
+	}
+
+	return 0; // Succès
+
+allocation_failed:
+	ethercat_buffer_cleanup(bdev);
+	return -1;
+}
+
+
 static int ethercat_init(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 
@@ -172,22 +229,23 @@ static int ethercat_finalize_mapping(BackendDriver_t* drv) {
 
 		ec_slavet* sl = &ec->ctx.slavelist[pos];
 
+
 		// On mémorise où sont les données dans l'IOmap de SOEM
 		ec_dev->soem_inputs = sl->inputs;
 		ec_dev->soem_outputs = sl->outputs;
 		if (sl->Ibytes != ec_dev->tx_pdo_size || sl->Obytes != ec_dev->rx_pdo_size) {
-			printf("[CONFIG] size mismatch slave %d: Ibytes=%d in_size=%u, Obytes=%d out_size=%u\n",
-				pos, sl->Ibytes, ec_dev->base.in_size, sl->Obytes, ec_dev->base.out_size);
+			printf("[CONFIG] size mismatch slave %d: Ibytes=%d in_size=%llu, Obytes=%d out_size=%llu\n",
+				pos, sl->Ibytes, ec_dev->in_size, sl->Obytes, ec_dev->out_size);
 			return -1;
 		}
 
-		if (buffered_device_init(&ec_dev->base, sl->Ibytes, sl->Obytes))
+		if (ethercat_buffers_init(ec_dev, sl->Ibytes, sl->Obytes))
 			return -1;
 	}
 
-	atomic_store_i32(&drv->active_in_buffer_idx, 0);
-	atomic_store_i32(&drv->active_out_buffer_idx, 0);
-	atomic_store_i32(&drv->rt_out_buffer_idx, 0);
+	atomic_store_i32(&ec->active_in_buffer_idx, 0);
+	atomic_store_i32(&ec->active_out_buffer_idx, 0);
+	atomic_store_i32(&ec->rt_out_buffer_idx, 0);
 
 
 	if(ec->has_dc_clock) ecx_configdc(&ec->ctx);
@@ -224,7 +282,7 @@ static int ethercat_stop(BackendDriver_t* b)
 
 static int ethercat_process(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
-	//TODO: sunc buffer
+	//CoE, mailbox...
 	return 0;
 }
 
@@ -243,9 +301,9 @@ static int ethercat_bind_device(BackendDriver_t* d, Device_t* dev, const DeviceC
 	ec_slavet* sl = &ed->ctx.slavelist[pos];
 
 	EtherCAT_Device_t* ec_dev = (EtherCAT_Device_t*)dev;
-
 	const DeviceDesc_t* d_desc = (DeviceDesc_t*)dev->desc;
 	const EtherCAT_DeviceDesc_t* hw_desc = (EtherCAT_DeviceDesc_t*)d_desc->hw_desc;
+
 	ec_dev->rx_pdo_size = hw_desc->rx_pdo_size;
 	ec_dev->tx_pdo_size = hw_desc->tx_pdo_size;
 
@@ -262,7 +320,6 @@ static int ethercat_bind_device(BackendDriver_t* d, Device_t* dev, const DeviceC
 
 	ec_dev->slave_index = pos;
 	ed->slaves[ed->slave_count++] = ec_dev;
-	//ec_dev->master = ed;
 	dev->driver = (BackendDriver_t*)ed;
 
 	return 0;
@@ -273,36 +330,36 @@ static void ethercat_sync_buffers(BackendDriver_t* b)
 {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 
-	int plc_idx = atomic_load_i32(&b->active_out_buffer_idx);
+	int plc_idx = atomic_load_i32(&d->active_out_buffer_idx);
 	int next_plc = (plc_idx == 0) ? 1 : 0;
 
 	// 1) Commit : RT enverra ce que le PLC vient d'écrire
-	atomic_store_i32(&b->rt_out_buffer_idx, plc_idx);
+	atomic_store_i32(&d->rt_out_buffer_idx, plc_idx);
 
 	// 2) Rémanence (optionnel mais recommandé si PLC n'écrit pas tout)
 	for (int i = 0; i < d->slave_count; i++) {
-		BufferedDevice_t *dev = &d->slaves[i]->base;
+		EtherCAT_Device_t* dev = d->slaves[i];
 		if (dev->out_size > 0) {
 			memcpy(dev->out_buffers[next_plc], dev->out_buffers[plc_idx], dev->out_size);
 		}
 	}
 
 	// 3) Publication : PLC écrira dans next_plc au prochain tick
-	atomic_store_i32(&b->active_out_buffer_idx, next_plc);
+	atomic_store_i32(&d->active_out_buffer_idx, next_plc);
 }
 
 
-static uint8_t* ethercat_device_get_input_ptr(BackendDriver_t* drv, EtherCAT_Device_t* dev)
+static uint8_t* ethercat_device_get_input_ptr(EtherCAT_Driver_t* drv, EtherCAT_Device_t* dev)
 {
 	int idx = atomic_load_i32(&drv->active_in_buffer_idx);
-	return dev->base.in_buffers[idx];
+	return dev->in_buffers[idx];
 }
 
 
-static uint8_t* ethercat_device_get_output_ptr(BackendDriver_t* drv, EtherCAT_Device_t* dev)
+static uint8_t* ethercat_device_get_output_ptr(EtherCAT_Driver_t* drv, EtherCAT_Device_t* dev)
 {
 	int idx = atomic_load_i32(&drv->active_out_buffer_idx);
-	return dev->base.out_buffers[idx];
+	return dev->out_buffers[idx];
 }
 
 
@@ -314,8 +371,8 @@ static const BackendDriverOps_t ops = {
 	.stop = ethercat_stop,
 	.process = ethercat_process,
 	.sync = ethercat_sync_buffers,
-	.get_input_ptr = ethercat_device_get_input_ptr,
-	.get_output_ptr = ethercat_device_get_output_ptr
+	.get_input_data = ethercat_device_get_input_ptr,
+	.get_output_data = ethercat_device_get_output_ptr
 };
 
 
@@ -349,10 +406,9 @@ BackendDriver_t* EtherCAT_Driver_Create(const BackendConfig_t* config, int insta
 void EtherCAT_Driver_Destroy(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 	
-
 	for (int i = 0; i < d->slave_count; i++) {
 		EtherCAT_Device_t* dev = d->slaves[i];
-		buffered_device_cleanup(&dev->base);
+		ethercat_buffer_cleanup(&dev->base);
 	}
 	FREE(d->iomap);
 	FREE(d);

@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="src\backend\ethercat\ethercat_desc.c" />
     <ClCompile Include="src\core\backend\backend.c" />
-    <ClCompile Include="src\core\device\buffered_device.c" />
     <ClCompile Include="src\core\device\device.c" />
     <ClCompile Include="src\core\plateform\win32\sleep.c" />
     <ClCompile Include="src\core\plateform\win32\thread.c" />
@@ -46,7 +45,6 @@
     <ClInclude Include="src\backend\ethercat\ethercat_config.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_desc.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_device.h" />
-    <ClInclude Include="src\core\device\buffered_device.h" />
     <ClInclude Include="src\core\tags\tags.h" />
     <ClInclude Include="src\core\tags\tags_desc.h" />
     <ClInclude Include="src\backend\ethercat\ethercat_thread.h" />
