@@ -5,9 +5,6 @@
 #include "scheduler_thread.h"
 #include <osal.h>
 
-//a enlever
-#include <stdio.h>
-
 //TODO: configurer tick_period_ns deans config
 static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 {
@@ -37,11 +34,29 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 			PLC_Task_t* t = &s->tasks[i];
 
 			// Initialisation au premier passage
-			if (t->next_deadline.tv_sec == 0) t->next_deadline = now;
+			if (!t->init) {
+				t->next_deadline = now;
+				add_time_ns(&t->next_deadline, t->offset_ns);
+				t->init = true;
+			}
 
 			if (osal_timespeccmp(&now, &t->next_deadline, >= )) {
-				t->run(r);
-				add_time_ns(&t->next_deadline, t->period_ns);
+				int health = atomic_load_i32(&s->health_level);
+
+				bool allow = true;
+				if (health >= PLC_HEALTH_FAULT) {
+					switch (t->policy) {
+					case PLC_TASK_ALWAYS_RUN:   allow = true;  break;
+					case PLC_TASK_SKIP_ON_FAULT:allow = false; break;
+					case PLC_TASK_CONTROL_ONLY: allow = false; break;
+					default: allow = false; break;
+					}
+				}
+
+				if (allow) {
+					t->run(r);
+					add_time_ns(&t->next_deadline, t->period_ns);
+				}
 			}
 		}
 
@@ -53,53 +68,6 @@ static OSAL_THREAD_HANDLE scheduler_thread(void* arg)
 	return 0;
 }
 
-
-#if 0
-static OSAL_THREAD_HANDLE scheduler_thread_old(void* arg)
-{
-	Scheduler_t* s = arg;
-	Runtime_t* r = s->runtime;
-
-	ec_timet next;
-	ec_timet now;
-
-	osal_get_monotonic_time(&next);
-	/* alignement optionnel */
-	next.tv_nsec = ((next.tv_nsec / 1000000) + 1) * 1000000;
-
-	while (atomic_cas_i32(&s->running, 1, 1)) {
-		/* attendre le tick */
-		osal_monotonic_sleep(&next);
-
-		osal_get_monotonic_time(&now);
-
-		for (size_t i = 0; i < s->task_count; i++) {
-			PLC_Task_t* t = &s->tasks[i];
-
-			if (osal_timespeccmp(&now, &t->next_deadline, >= )) {
-				//printf("[SCHEDULER] exec task %d\n", i);
-				ec_timet t0, t1, dt;
-
-				osal_get_monotonic_time(&t0);
-				t->run(r);
-				osal_get_monotonic_time(&t1);
-				//t->init = 1;
-				osal_time_diff(&t0, &t1, &dt);
-
-				t->exec_time_ns =
-					dt.tv_sec * 1000000000ULL + dt.tv_nsec;
-
-				if (t->exec_time_ns > t->period_ns)
-					t->overrun_count++;
-
-				add_time_ns(&t->next_deadline, t->period_ns);
-			}
-		}
-	}
-
-	return 0;
-}
-#endif
 
 void scheduler_start_thread(Scheduler_t* s)
 {

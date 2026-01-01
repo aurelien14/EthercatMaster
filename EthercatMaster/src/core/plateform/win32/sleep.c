@@ -1,5 +1,6 @@
 #include "sleep.h"
 
-void sleep(unsigned long ms) {
+/*
+void sleep_ms(unsigned long ms) {
 	Sleep(ms);
-}
+}*/

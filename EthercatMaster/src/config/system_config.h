@@ -59,9 +59,11 @@ typedef struct DeviceConfig {
 /*--------------------------------------------------*/
 //TODO: faire une config statique pour les taches comme pour les drivers
 typedef struct {
-	PLC_TaskFunc plc_task;
 	const char* name;
-	uint32_t period_us;
+	uint32_t period_ms;
+	uint32_t offset_ms;
+	PLC_TaskFunc run;
+	PLC_Task_Policy_t policy;
 } PLC_TaskConfig_t;
 
 
@@ -91,6 +93,9 @@ typedef struct {
 
 	DeviceConfig_t* devices;
 	size_t device_count;
+
+	PLC_TaskConfig_t* PLC_Task_conf;
+	size_t plc_task_count;
 
 	const PLC_Variables_Config_t* plc_variables;
 	size_t plc_variables_count;

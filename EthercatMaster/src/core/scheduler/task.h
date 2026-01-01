@@ -5,6 +5,13 @@
 
 typedef int (*PLC_TaskFunc)(void* ctx);
 
+typedef enum {
+	PLC_TASK_ALWAYS_RUN = 0,   // safety, diag, hmi, recovery
+	PLC_TASK_SKIP_ON_FAULT,    // logique non critique
+	PLC_TASK_CONTROL_ONLY,     // commande machine -> stop si fault
+} PLC_Task_Policy_t;
+
+
 typedef struct {
 	const char* name;
 
@@ -12,7 +19,8 @@ typedef struct {
 	uint32_t offset_ms;
 
 	PLC_TaskFunc run;
-	//void* context;
+	
+	PLC_Task_Policy_t policy;
 
 	/* runtime */
 	bool init;

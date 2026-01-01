@@ -61,6 +61,21 @@ static const DeviceConfig_t system_devices[] = {
 
 
 /*--------------------------------------------------*/
+/*			P L C  T A S K    C O N F				*/
+/*--------------------------------------------------*/
+extern int plc_task1_run(void* ctx);
+static const PLC_TaskConfig_t PLC_Task_conf[] = {
+	{
+		.name = "FAST",
+		.period_ms = 100,
+		.run = plc_task1_run,
+		.policy = PLC_TASK_SKIP_ON_FAULT,
+	},
+};
+
+
+
+/*--------------------------------------------------*/
 /*			P L C  T A G S   C O N F				*/
 /*--------------------------------------------------*/
 static const PLC_Variables_Config_t PLC_Tags_desc_arr[] = {
@@ -136,6 +151,9 @@ const PLCSystemConfig_t PLC_SYSTEM_CONFIG = {
 
 	.devices = (DeviceConfig_t*)system_devices,
 	.device_count = sizeof(system_devices) / sizeof(system_devices[0]),
+
+	.PLC_Task_conf = PLC_Task_conf,
+	.plc_task_count = sizeof(PLC_Task_conf) / sizeof(PLC_Task_conf[0]),
 
 	.plc_variables = PLC_Tags_desc_arr,
 	.plc_variables_count = sizeof(PLC_Tags_desc_arr) / sizeof(PLC_Tags_desc_arr[0])

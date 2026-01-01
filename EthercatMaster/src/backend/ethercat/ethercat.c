@@ -78,18 +78,6 @@ int ethercat_transition_op(EtherCAT_Driver_t* ec)
 }
 
 
-static int soem_config_callback(ecx_contextt* ctx, uint16_t slave) {
-	// 1. Trouver le device correspondant à cet index d'esclave
-	/*EtherCAT_Device_t* dev = find_device_by_slave_index(slave);
-
-	// 2. Appeler le hook du descripteur
-	if (dev->desc->config_hook) {
-		return dev->desc->config_hook(dev->master, slave);
-	}*/
-	return 1;
-}
-
-
 static void print_available_adapters(void) {
 	ec_adaptert* adapter = NULL;
 	ec_adaptert* head = NULL;
@@ -212,7 +200,7 @@ static int ethercat_init(BackendDriver_t* b) {
 
 
 static int ethercat_finalize_mapping(BackendDriver_t* drv) {
-	sleep(1000);
+	sleep_ms(1000);	//Device ethercat need time to initialize
 	EtherCAT_Driver_t* ec = (EtherCAT_Driver_t*)drv;
 	int size = ecx_config_map_group(&ec->ctx, ec->iomap, 0);
 
@@ -224,6 +212,9 @@ static int ethercat_finalize_mapping(BackendDriver_t* drv) {
 		printf("[CONFIG] tableau IOmap trop petit, taille:%llu, requière:%d", (unsigned long long)ec->iomap_size, size);
 		return -1;
 	}
+
+	ec_groupt* group = &ec->ctx.grouplist[0];
+	ec->expected_wkc = (group->outputsWKC * 2) + group->inputsWKC;
 
 	for (int i = 0; i < ec->slave_count; i++) {
 		EtherCAT_Device_t* ec_dev = ec->slaves[i];
@@ -261,19 +252,33 @@ static int ethercat_start(BackendDriver_t* b)
 {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 
-	//ethercat_transition_safeop(d); //fait dans ethercat_finalize_mapping
-	ethercat_transition_op(d);
+	int rc = ethercat_transition_op(d);
+	if (rc != 0) {
+		atomic_store_i32(&d->ethercat_state, EC_STATE_SAFE_OP); // ou FAULT
+		atomic_store_i32(&d->in_op, 0);
+		return -1;
+	}
+
+	atomic_store_i32(&d->ethercat_state, EC_STATE_OPERATIONAL);
+	atomic_store_i32(&d->in_op, 1);
+	d->counter_fault = 0;
 
 	ethercat_start_thread(d);
 	return 0;
 }
 
-
 static int ethercat_stop(BackendDriver_t* b)
 {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
+
+	// 1) Stopper les threads d'abord (évite accès concurrent ctx)
 	ethercat_stop_thread(d);
 
+	// 2) Marquer l'état runtime
+	atomic_store_i32(&d->in_op, 0);
+	atomic_store_i32(&d->ethercat_state, EC_STATE_SAFE_OP);
+
+	// 3) Demander SAFEOP au master
 	d->ctx.slavelist[0].state = EC_STATE_SAFE_OP;
 	ecx_writestate(&d->ctx, 0);
 	ecx_statecheck(&d->ctx, 0, EC_STATE_SAFE_OP, 200000);
@@ -282,9 +287,13 @@ static int ethercat_stop(BackendDriver_t* b)
 }
 
 
+
 static int ethercat_process(BackendDriver_t* b) {
 	EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)b;
 	//CoE, mailbox...
+
+	//printf("[ECAT] jitter: %u us\n", d->stats.jitter_us);
+
 	return 0;
 }
 

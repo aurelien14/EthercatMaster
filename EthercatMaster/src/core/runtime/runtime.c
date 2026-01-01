@@ -55,8 +55,8 @@ static int runtime_create_plc_tag(Runtime_t* runtime, const PLCSystemConfig_t* p
 		printf("[RUNTIME] Unable to allocate memory for tags\n");
 		return -1;
 	}
-	runtime->tags = tags;
-	runtime->tag_count = plc_config->plc_variables_count;
+	runtime->plc_vars = tags;
+	runtime->plc_vars_count = plc_config->plc_variables_count;
 
 	for (size_t i = 0; i < plc_config->plc_variables_count; i++) {
 
@@ -197,14 +197,11 @@ int runtime_init(Runtime_t *runtime, const PLCSystemConfig_t* plc_config) {
 
 	//5. Init PLC tasks Scheduler
 	scheduler_init(&runtime->plc, runtime, SCHEDULER_BASE_CYCLE_US);
-	scheduler_add_task(&runtime->plc,
-		&(PLC_Task_t){
-		.name = "FAST",
-			.period_ms = 100,
-			.run = plc_task1_run,
-			//.context = runtime,
-			.init = 0
-	});
+
+	//6. Add plc tasks
+	for (int i = 0; i < plc_config->plc_task_count; i++) {
+		scheduler_add_task_from_config(&runtime->plc, &plc_config->PLC_Task_conf[i]);
+	}
 
 	return 0;
 }
@@ -229,18 +226,6 @@ void runtime_process(Runtime_t* runtime) {
 		BackendDriver_t* drv = runtime->backends[i];
 		if (drv->ops->process)
 			drv->ops->process(drv);
-
-		if (drv->desc->protocol == PROTO_ETHERCAT) {
-			EtherCAT_Driver_t* d = (EtherCAT_Driver_t*)drv;
-			/*printf("[ECAT] cycles=%llu cycle[min/max]=%u/%u us jitter[min/max]=%u/%u us\n",
-				d->stats.total_cycles,
-				d->stats.min_cycle_time_us,
-				d->stats.max_cycle_time_us,
-				d->stats.min_jitter_us,
-				d->stats.max_jitter_us);*/
-			printf("[ECAT] jitter: %u us\n",
-				d->stats.jitter_us);
-		}
 	}
 
 
@@ -292,9 +277,9 @@ void runtime_cleanup(Runtime_t* runtime) {
 	
 
 	// Libérer les tags
-	FREE(runtime->tags);
-	runtime->tags = NULL;
-	runtime->tag_count = 0;
+	FREE(runtime->plc_vars);
+	runtime->plc_vars = NULL;
+	runtime->plc_vars_count = 0;
 
 	//Libérer
 	FREE(runtime);

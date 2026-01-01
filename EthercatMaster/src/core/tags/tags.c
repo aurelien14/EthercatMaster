@@ -27,10 +27,10 @@ static inline size_t plc_type_size(PLC_Variable_t*tag)
 
 
 PLC_Variable_t* get_tag_by_index(Runtime_t* runtime, size_t index) {
-	if (runtime->tag_count > 0) {
+	if (runtime->plc_vars_count > 0) {
 		return NULL;
 	}
-	return &runtime->tags[index];
+	return &runtime->plc_vars[index];
 }
 
 
@@ -40,9 +40,9 @@ PLC_Variable_t* get_tag_by_name(Runtime_t* runtime, const char* name) {
 		return NULL;  // Si l'une des valeurs est NULL, on retourne NULL
 	}
 
-	for (size_t i = 0; i < runtime->tag_count; i++) {
-		if (strcmp(runtime->tags[i].name, name) == 0) {
-			return &runtime->tags[i];  // Retourner le tag trouvé
+	for (size_t i = 0; i < runtime->plc_vars_count; i++) {
+		if (strcmp(runtime->plc_vars[i].name, name) == 0) {
+			return &runtime->plc_vars[i];  // Retourner le tag trouvé
 		}
 	}
 

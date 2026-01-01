@@ -17,6 +17,28 @@ typedef struct Ethercat_Stats {
 	uint64_t total_cycles;
 } Ethercat_Stats_t;
 
+typedef struct {
+	uint8_t	in_op;			// 0/1
+	uint8_t	fault_latched;		// 0/1
+	uint16_t ethercat_state;		// EC_STATE_*
+
+	uint32_t wkc;
+	uint32_t expected_wkc;
+	uint32_t dowkccheck;
+
+	uint32_t slavecount;
+	uint32_t lost_count;		// combien islost
+	uint32_t not_op_count;		// combien state != OP
+
+	uint64_t total_cycles;
+
+#if defined(ETHERCAT_JITTER_CALC)
+	uint32_t jitter_us;
+	uint32_t max_jitter_us;
+#endif
+} EtherCAT_Status_t;
+
+
 
 typedef struct EtherCAT_Driver {
 	BackendDriver_t base;
@@ -29,15 +51,30 @@ typedef struct EtherCAT_Driver {
 	EtherCAT_Device_t* slaves[ECAT_MAX_SLAVES];
 	size_t slave_count;
 
+	//ethcat state
+	EtherCAT_Status_t status;
+	atomic_i32_t in_op;			// 0/1
+	atomic_i32_t fault_latched;		// 0/1
+	atomic_i32_t ethercat_state;		// EC_STATE_*
+	uint32_t counter_fault;
+
+	uint32_t wkc;
+	uint32_t expected_wkc;
+	uint32_t dowkccheck;
+	atomic_i32_t reset_req;     // 0/1 (mis à 1 par HMI/PLC)
+
+
 	//Double buffuring
 	atomic_i32_t active_out_buffer_idx;
 	atomic_i32_t active_in_buffer_idx;
 	atomic_i32_t rt_out_buffer_idx;
 
 	//thread ethercat
-	volatile int running;
+	atomic_i32_t running;
+	atomic_i32_t soem_lock;
 	uint32_t thread_cycle_us; //temps du cycle thread ethercat en microsecondes
-	OSAL_THREAD_HANDLE thread;
+	OSAL_THREAD_HANDLE rt_thread;
+	OSAL_THREAD_HANDLE watchdog_thread;
 	LARGE_INTEGER qpc_freq;
 	LARGE_INTEGER next_deadline;
 

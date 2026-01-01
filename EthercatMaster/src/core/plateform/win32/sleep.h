@@ -3,6 +3,9 @@
 #include <windows.h>
 #include <stdint.h>
 
+#define sleep_ms(ms)	Sleep(ms)
+
+
 static inline uint64_t qpc_to_us(const LARGE_INTEGER* delta, const LARGE_INTEGER* freq) {
 	return (uint64_t)((delta->QuadPart * 1000000ULL) / freq->QuadPart);
 }

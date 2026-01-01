@@ -28,3 +28,9 @@ static inline int32_t atomic_cas_i32(
 {
 	return InterlockedCompareExchange(v, desired, expected);
 }
+
+
+static inline int32_t atomic_add_i32(atomic_i32_t* v, int32_t x)
+{
+	return InterlockedExchangeAdd(v, x);
+}

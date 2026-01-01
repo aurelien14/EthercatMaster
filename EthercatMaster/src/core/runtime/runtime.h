@@ -34,8 +34,8 @@ typedef struct Runtime {
 	long system_is_running;
 
 
-	PLC_Variable_t* tags;
-	size_t     tag_count;
+	PLC_Variable_t* plc_vars;
+	size_t     plc_vars_count;
 
 } Runtime_t;
 

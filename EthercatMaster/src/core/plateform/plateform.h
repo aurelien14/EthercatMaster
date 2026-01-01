@@ -5,6 +5,7 @@
 #include "win32/atomic.h"
 #include "win32/thread.h"
 #include "win32/sleep.h"
+#include <timeapi.h>
 #endif
 
-void sleep(unsigned long ms);
+//void sleep_ms(unsigned long ms);
